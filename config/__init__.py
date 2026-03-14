@@ -16,20 +16,8 @@ from datetime import timedelta
 # ==================== CONFIGURACIÓN DEL PROYECTO ====================
 # =====================================================
 # [ZONA 1] EDITAR NOMBRE Y DATOS BÁSICOS
-# Cambia los valores de tu aplicación aquí
+# Los valores están ahora en la clase Config
 # =====================================================
-
-# Nombre de tu aplicación
-APP_NAME = "MiAppSalud"
-
-# Versión
-APP_VERSION = "1.0.0"
-
-# Descripción
-APP_DESCRIPTION = "Sistema de gestión de salud"
-
-# URL de producción
-PRODUCTION_URL = "https://miapp.ejemplo.com"
 
 
 class Config:
@@ -39,6 +27,11 @@ class Config:
     # [ZONA 2] CLAVES Y CONFIGURACIÓN GENERAL
     # Edita SECRET_KEY para producción
     # =====================================================
+    
+    # --- NOMBRE Y VERSIÓN DE LA APP ---
+    APP_NAME = "MiAppSalud"
+    APP_VERSION = "1.0.0"
+    APP_DESCRIPTION = "Sistema de gestión de salud"
     
     # --- CLAVES SECRETAS ---
     SECRET_KEY = os.getenv('SECRET_KEY', 'cambia-esta-clave-secreta-2024')
