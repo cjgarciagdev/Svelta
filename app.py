@@ -11,7 +11,6 @@ Para usar:
 
 import os
 from flask import Flask, render_template, redirect, url_for, jsonify, request
-from flask_login import current_user, login_required
 
 # Cargar variables de entorno
 from dotenv import load_dotenv
@@ -19,8 +18,8 @@ load_dotenv()
 
 # Importar configuración
 from config import get_config, Config
-from core import db, login_manager, init_extensions, init_db
-from models import Usuario
+from core import db, init_extensions, init_db
+# from flask_login import current_user, login_required  # [LOGIN] Descomenta para activar login
 
 
 def create_app():
@@ -37,10 +36,13 @@ def create_app():
     # Inicializar extensiones
     init_extensions(app)
     
-    # Configurar user loader
-    @login_manager.user_loader
-    def load_user(user_id):
-        return Usuario.query.get(int(user_id))
+    # [LOGIN] Configurar user loader (Descomenta para activar login)
+    # from flask_login import login_manager
+    # from core import login_manager
+    # @login_manager.user_loader
+    # def load_user(user_id):
+    #     from models import Usuario
+    #     return Usuario.query.get(int(user_id))
     
     # Inicializar base de datos
     init_db(app)
@@ -71,16 +73,18 @@ def create_app():
     
     @app.route('/')
     def index():
-        """Página principal - redirige según autenticación"""
-        if not current_user.is_authenticated:
-            return redirect(url_for('auth.login'))
+        """Página principal"""
+        # [LOGIN] Para redirigir a login:
+        # if not current_user.is_authenticated:
+        #     return redirect(url_for('auth.login'))
         return render_template('index.html')
     
     @app.route('/dashboard')
-    @login_required
     def dashboard():
-        """Panel principal después del login"""
-        return render_template('dashboard.html')
+        """Panel principal"""
+        # [LOGIN] Descomenta para proteger la ruta:
+        # @login_required
+        return render_template('index.html')
     
     @app.route('/api/saludo')
     def api_saludo():
@@ -101,15 +105,10 @@ def register_blueprints(app):
     # Agrega tus importaciones aquí:
     # from routes.tu_modulo_routes import tu_modulo_bp
     # =====================================================
-    from routes.auth_routes import auth_bp
-    app.register_blueprint(auth_bp)
     
-    # =====================================================
-    # [ZONA B] REGISTRAR BLUEPRINTS
-    # Ejemplo para agregar nuevo blueprint:
-    # from routes.paciente_routes import paciente_bp
-    # app.register_blueprint(paciente_bp)
-    # =====================================================
+    # [LOGIN] Blueprint de auth (comentado para desactivar login)
+    # from routes.auth_routes import auth_bp
+    # app.register_blueprint(auth_bp)
     
     # --- AGREGAR NUEVOS BLUEPRINTS ABAJO DE ESTA LÍNEA ---
     # (Ejemplo commented como guía)
@@ -122,19 +121,19 @@ def register_blueprints(app):
 def inject_context(app):
     """Inyecta variables globales a los templates"""
     # =====================================================
-    # [ZONA C] AGREGAR VARIABLES GLOBALES A TEMPLATES
+    # [ZONA B] AGREGAR VARIABLES GLOBALES A TEMPLATES
     # Agrega más valores al diccionario retornado:
     # return dict(
-    #     current_user=current_user,
     #     app_name=Config.APP_NAME,
     #     nueva_variable="valor"
     # )
     # =====================================================
     @app.context_processor
     def inject_user():
-        from models import Configuracion
+        # [LOGIN] Para incluir usuario actual:
+        # from flask_login import current_user
+        # return dict(current_user=current_user, app_name=Config.APP_NAME, app_version=Config.APP_VERSION)
         return dict(
-            current_user=current_user,
             app_name=Config.APP_NAME,
             app_version=Config.APP_VERSION
         )

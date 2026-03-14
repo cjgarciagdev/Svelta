@@ -9,7 +9,7 @@ Para agregar más extensiones:
 """
 
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager
+# from flask_login import LoginManager  # [LOGIN] Descomenta para activar login
 from flask import Flask
 
 # =====================================================
@@ -21,10 +21,10 @@ from flask import Flask
 
 # Instancias globales - NO EDITAR
 db = SQLAlchemy()
-login_manager = LoginManager()
+# login_manager = LoginManager()  # [LOGIN] Descomenta para activar login
 
 # Configuración por defecto
-login_manager.login_view = 'auth.login'
+# login_manager.login_view = 'auth.login'  # [LOGIN] Descomenta para activar login
 
 
 def init_extensions(app: Flask):
@@ -37,15 +37,15 @@ def init_extensions(app: Flask):
     # =====================================================
     
     db.init_app(app)
-    login_manager.init_app(app)
+    # login_manager.init_app(app)  # [LOGIN] Descomenta para activar login
     
-    # Configurar sesión
-    from config import Config
-    app.config['PERMANENT_SESSION_LIFETIME'] = Config.PERMANENT_SESSION_LIFETIME
-    app.config['SESSION_COOKIE_SECURE'] = Config.is_production()
-    app.config['SESSION_COOKIE_HTTPONLY'] = True
-    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-    login_manager.remember_cookie_duration = Config.REMEMBER_COOKIE_DURATION
+    # [LOGIN] Configurar sesión (Descomenta para activar login):
+    # from config import Config
+    # app.config['PERMANENT_SESSION_LIFETIME'] = Config.PERMANENT_SESSION_LIFETIME
+    # app.config['SESSION_COOKIE_SECURE'] = Config.is_production()
+    # app.config['SESSION_COOKIE_HTTPONLY'] = True
+    # app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    # login_manager.remember_cookie_duration = Config.REMEMBER_COOKIE_DURATION
 
 
 def init_db(app: Flask):
