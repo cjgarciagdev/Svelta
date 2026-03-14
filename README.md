@@ -1,4 +1,4 @@
-## PRUEBA DE ACCESO
+
 ## Leyes del Desarrollador (Protocolo Obligatorio)
 
 Para mantener la integridad y estabilidad, todo colaborador debe seguir estas normas:
