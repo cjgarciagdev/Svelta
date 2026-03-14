@@ -1,17 +1,31 @@
 """
 Auth Routes - Plantilla de Autenticación
-=======================================
+======================================
 Copia este archivo y personalízalo.
+
+Estructura de un Blueprint:
+1. Crear el Blueprint: auth_bp = Blueprint('nombre', __name__, url_prefix='/ruta')
+2. Definir rutas con decoradores: @auth_bp.route('/ruta')
+3. Registrar en app.py: app.register_blueprint(auth_bp)
 """
 
-from flask import Blueprint, render_template, request, redirect, url_for, session
+from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from datetime import timedelta
 from models import db, Usuario
 from config import Config
 
-auth_bp = Blueprint('auth', __name__)
+# =====================================================
+# [ZONA 1] DEFINICIÓN DEL BLUEPRINT
+# Cambia el nombre y url_prefix según tu módulo
+# =====================================================
+auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
+
+# ==================== RUTAS DE AUTENTICACIÓN ====================
+# =====================================================
+# [ZONA 2] RUTAS DE AUTH - LOGIN/LOGOUT/REGISTRO
+# =====================================================
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -83,3 +97,26 @@ def registro():
         return redirect(url_for('auth.login'))
     
     return render_template('registro.html')
+
+
+# ==================== AGREGAR MÁS RUTAS DE AUTH ====================
+# =====================================================
+# [ZONA 3] AGREGAR RUTAS ADICIONALES AQUÍ
+# Ejemplos:
+# @auth_bp.route('/olvide-password')
+# def olvide_password():
+#     return render_template('olvide_password.html')
+#
+# @auth_bp.route('/cambiar-password', methods=['GET', 'POST'])
+# @login_required
+# def cambiar_password():
+#     if request.method == 'POST':
+#         # lógica para cambiar password
+#         pass
+#     return render_template('cambiar_password.html')
+#
+# @auth_bp.route('/perfil')
+# @login_required
+# def perfil():
+#     return render_template('perfil.html', user=current_user)
+# =====================================================

@@ -1,6 +1,6 @@
 """
 App Factory - Plantilla Reutilizable
-==================================
+===================================
 Copia este archivo como base para tu proyecto.
 
 Para usar:
@@ -46,12 +46,28 @@ def create_app():
     init_db(app)
     
     # Registrar blueprints
+    # =====================================================
+    # [ZONA 1] AGREGAR BLUEPRINTS AQUÍ
+    # Importa y registra tus nuevos blueprints en register_blueprints()
+    # =====================================================
     register_blueprints(app)
     
     # Inyectar contexto global
+    # =====================================================
+    # [ZONA 2] AGREGAR VARIABLES GLOBALES A TEMPLATES AQUÍ
+    # Edita inject_context() para agregar más variables globales
+    # =====================================================
     inject_context(app)
-    
+
     # ==================== RUTAS PRINCIPALES ====================
+    # =====================================================
+    # [ZONA 3] AGREGAR RUTAS PRINCIPALES AQUÍ
+    # Agrega tus @app.route() debajo de esta línea
+    # Ejemplo:
+    # @app.route('/mi-ruta')
+    # def mi_ruta():
+    #     return render_template('mi_template.html')
+    # =====================================================
     
     @app.route('/')
     def index():
@@ -80,16 +96,40 @@ def create_app():
 
 def register_blueprints(app):
     """Registra los blueprints - Agrega los tuyos aquí"""
+    # =====================================================
+    # [ZONA A] IMPORTAR BLUEPRINTS
+    # Agrega tus importaciones aquí:
+    # from routes.tu_modulo_routes import tu_modulo_bp
+    # =====================================================
     from routes.auth_routes import auth_bp
     app.register_blueprint(auth_bp)
     
-    # Ejemplo de cómo agregar más blueprints:
+    # =====================================================
+    # [ZONA B] REGISTRAR BLUEPRINTS
+    # Ejemplo para agregar nuevo blueprint:
     # from routes.paciente_routes import paciente_bp
     # app.register_blueprint(paciente_bp)
+    # =====================================================
+    
+    # --- AGREGAR NUEVOS BLUEPRINTS ABAJO DE ESTA LÍNEA ---
+    # (Ejemplo commented como guía)
+    # from routes.producto_routes import producto_bp
+    # app.register_blueprint(producto_bp)
+    # from routes.reporte_routes import reporte_bp
+    # app.register_blueprint(reporte_bp)
 
 
 def inject_context(app):
     """Inyecta variables globales a los templates"""
+    # =====================================================
+    # [ZONA C] AGREGAR VARIABLES GLOBALES A TEMPLATES
+    # Agrega más valores al diccionario retornado:
+    # return dict(
+    #     current_user=current_user,
+    #     app_name=Config.APP_NAME,
+    #     nueva_variable="valor"
+    # )
+    # =====================================================
     @app.context_processor
     def inject_user():
         from models import Configuracion
@@ -105,6 +145,9 @@ socketio = None
 
 
 # ==================== PUNTO DE ENTRADA ====================
+
+# Crear instancia de la aplicación para Gunicorn
+app = create_app()
 
 if __name__ == '__main__':
     app = create_app()

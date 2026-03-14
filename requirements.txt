@@ -12,5 +12,5 @@ gunicorn==21.2.0
 gevent>=24.2.1
 gevent-websocket>=0.10.1
 
-# Base de datos (comenta si usas SQLite local)
-# psycopg2-binary>=2.9.11
+# Base de datos (necesario para PostgreSQL en producción)
+psycopg2-binary>=2.9.11

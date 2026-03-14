@@ -14,6 +14,10 @@ from datetime import timedelta
 
 
 # ==================== CONFIGURACIÓN DEL PROYECTO ====================
+# =====================================================
+# [ZONA 1] EDITAR NOMBRE Y DATOS BÁSICOS
+# Cambia los valores de tu aplicación aquí
+# =====================================================
 
 # Nombre de tu aplicación
 APP_NAME = "MiAppSalud"
@@ -31,6 +35,11 @@ PRODUCTION_URL = "https://miapp.ejemplo.com"
 class Config:
     """Configuración base de la aplicación"""
     
+    # =====================================================
+    # [ZONA 2] CLAVES Y CONFIGURACIÓN GENERAL
+    # Edita SECRET_KEY para producción
+    # =====================================================
+    
     # --- CLAVES SECRETAS ---
     SECRET_KEY = os.getenv('SECRET_KEY', 'cambia-esta-clave-secreta-2024')
     
@@ -47,6 +56,10 @@ class Config:
     REMEMBER_COOKIE_DURATION = timedelta(days=30)
     
     # --- ROLES PERMITIDOS ---
+    # =====================================================
+    # [ZONA 3] EDITAR ROLES DE USUARIO
+    # Define los roles de tu aplicación aquí
+    # =====================================================
     # Edita según los roles de tu aplicación
     ALLOWED_ROLES = ['admin', 'especialista', 'usuario']
     DEFAULT_ROLE = 'usuario'
@@ -54,6 +67,11 @@ class Config:
     @staticmethod
     def get_database_uri():
         """Obtiene la URI de la base de datos"""
+        # =====================================================
+        # [ZONA 4] CONFIGURACIÓN DE BASE DE DATOS
+        # PostgreSQL: DATABASE_URL se configura en variables de entorno
+        # SQLite: Se usa automáticamente si no hay DATABASE_URL
+        # =====================================================
         db_uri = os.getenv('DATABASE_URL')
         
         if db_uri:
@@ -73,6 +91,10 @@ class Config:
     @staticmethod
     def get_engine_options():
         """Opciones del motor de base de datos"""
+        # =====================================================
+        # [ZONA 5] CONFIGURACIÓN AVANZADA DE DB
+        # Pool settings, SSL, etc. para PostgreSQL
+        # =====================================================
         db_uri = Config.get_database_uri()
         
         if not db_uri.startswith('postgresql'):
@@ -129,5 +151,9 @@ config_by_name = {
 
 def get_config():
     """Obtiene la configuración según el entorno"""
+    # =====================================================
+    # [ZONA 6] SELECCIÓN DE ENTORNO
+    # Cambia FLASK_ENV a 'production' para desplegar
+    # =====================================================
     env = os.getenv('FLASK_ENV', 'development')
     return config_by_name.get(env, DevelopmentConfig)

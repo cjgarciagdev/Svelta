@@ -17,6 +17,12 @@ from werkzeug.security import generate_password_hash, check_password_hash
 db = SQLAlchemy()
 
 
+# ==================== USUARIO (Sistema de Auth) ====================
+# =====================================================
+# [ZONA 1] MODELO DE USUARIO - EDITAR AQUÍ
+# Este modelo es requerido para Flask-Login
+# =====================================================
+
 class Usuario(UserMixin, db.Model):
     """Modelo de Usuario base - Edita según necesidad"""
     __tablename__ = 'usuario'
@@ -55,7 +61,34 @@ class Usuario(UserMixin, db.Model):
         }
 
 
-# ==================== MODELOS DE EJEMPLO - EDITA ESTOS ====================
+# ==================== MODELOS PERSONALIZADOS ====================
+# =====================================================
+# [ZONA 2] AGREGAR NUEVOS MODELOS AQUÍ
+# Copia el siguiente template para nuevos modelos:
+#
+# class TuNuevoModelo(db.Model):
+#     """Descripción del modelo"""
+#     __tablename__ = 'tu_tabla'
+#     
+#     id = db.Column(db.Integer, primary_key=True)
+#     nombre = db.Column(db.String(100), nullable=False)
+#     descripcion = db.Column(db.Text)
+#     fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
+#     activo = db.Column(db.Boolean, default=True)
+#     
+#     # Relaciones
+#     usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'))
+#     usuario = db.relationship('Usuario', backref='mis_registros')
+#     
+#     def __repr__(self):
+#         return f'<TuNuevoModelo {self.nombre}>'
+#
+#     def to_dict(self):
+#         return {
+#             'id': self.id,
+#             'nombre': self.nombre
+#         }
+# =====================================================
 
 class Registro(db.Model):
     """Ejemplo: Modelo base para registros"""
@@ -95,7 +128,31 @@ class Configuracion(db.Model):
         db.session.commit()
 
 
+# ==================== AGREGAR MODELOS ADICIONALES ABAJO ====================
+# --- Modelos de ejemplo commentados como guía ---
+# 
+# class Producto(db.Model):
+#     """Modelo de productos"""
+#     __tablename__ = 'producto'
+#     id = db.Column(db.Integer, primary_key=True)
+#     nombre = db.Column(db.String(100), nullable=False)
+#     precio = db.Column(db.Float)
+#     stock = db.Column(db.Integer, default=0)
+#     categoria_id = db.Column(db.Integer, db.ForeignKey('categoria.id'))
+#     categoria = db.relationship('Categoria', backref='productos')
+# 
+# class Categoria(db.Model):
+#     """Modelo de categorías"""
+#     __tablename__ = 'categoria'
+#     id = db.Column(db.Integer, primary_key=True)
+#     nombre = db.Column(db.String(50), nullable=False)
+
+
 # ==================== FUNCIÓN DE INICIALIZACIÓN ====================
+# =====================================================
+# [ZONA 3] INICIALIZACIÓN DE BASE DE DATOS
+# db.create_all() crea las tablas automáticamente
+# =====================================================
 
 def init_db(app):
     """Inicializa la base de datos"""
@@ -106,6 +163,10 @@ def init_db(app):
 
 def seed_default_data(app):
     """Agrega datos por defecto - Sobrescribe en tu proyecto"""
+    # =====================================================
+    # [ZONA 4] DATOS POR DEFECTO
+    # Agrega datos iniciales aquí si es necesario
+    # =====================================================
     with app.app_context():
         # Crear usuario admin si no existe
         admin = Usuario.query.filter_by(username='admin').first()
@@ -120,3 +181,10 @@ def seed_default_data(app):
             db.session.add(admin)
             db.session.commit()
             print("[OK] Usuario admin creado")
+        
+        # Agregar más datos por defecto aquí...
+        # ejemplo: crear categorías iniciales
+        # if not Categoria.query.first():
+        #     cat = Categoria(nombre='General')
+        #     db.session.add(cat)
+        #     db.session.commit()
