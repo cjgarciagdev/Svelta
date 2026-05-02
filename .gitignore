@@ -1,0 +1,11 @@
+# Python
+__pycache__/
+*.pyc
+
+# Base de datos
+*.sqlite
+*.db
+
+# Flet / OS
+.flet/
+.DS_Store
