@@ -108,3 +108,28 @@ def get_user_by_email(email):
     user = cursor.fetchone()
     conn.close()
     return user
+
+def get_all_users():
+    """Obtiene todos los usuarios de la base de datos."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users ORDER BY id DESC")
+    users = cursor.fetchall()
+    conn.close()
+    return users
+
+def update_user_status(user_id, new_status):
+    """Actualiza el estado de un usuario (PENDING, APPROVED, REJECTED)."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET status = ? WHERE id = ?", (new_status, user_id))
+    conn.commit()
+    conn.close()
+
+def update_user_role(user_id, new_role):
+    """Actualiza el rol de un usuario (ADMIN, FORMADOR)."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET role = ? WHERE id = ?", (new_role, user_id))
+    conn.commit()
+    conn.close()

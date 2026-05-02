@@ -1,6 +1,6 @@
 import flet as ft
 import hashlib
-from config.theme import BLUE_PRIMARY, LIGHT_BLUE_BG, LIGHT_BLUE_BORDER, TEXT_BLUE
+from config.theme import INCES_TEAL, INCES_BLUE, LIGHT_BLUE_BG, LIGHT_BLUE_BORDER, TEXT_BLUE
 from components.header import create_header
 from database.db import get_user_by_email
 import time
@@ -8,8 +8,8 @@ import time
 def login_view(page: ft.Page, on_register_click, on_login_success):
     """Vista principal de Login para Admins y Formadores."""
 
-    email_field = ft.TextField(label="Correo Electrónico", border_color=ft.Colors.GREY_300, border_radius=8, focused_border_color=BLUE_PRIMARY, text_size=14)
-    password_field = ft.TextField(label="Contraseña", password=True, can_reveal_password=True, border_color=ft.Colors.GREY_300, border_radius=8, focused_border_color=BLUE_PRIMARY, text_size=14)
+    email_field = ft.TextField(label="Correo Electrónico", border_color=ft.Colors.GREY_300, border_radius=8, focused_border_color=INCES_TEAL, text_size=14)
+    password_field = ft.TextField(label="Contraseña", password=True, can_reveal_password=True, border_color=ft.Colors.GREY_300, border_radius=8, focused_border_color=INCES_TEAL, text_size=14)
     error_text = ft.Text("", color=ft.Colors.RED_700, size=13, visible=False)
 
     def handle_login(e):
@@ -78,7 +78,7 @@ def login_view(page: ft.Page, on_register_click, on_login_success):
                                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                                 spacing=20,
                                 controls=[
-                                    ft.Text("Portal de Censo e Inscripción", size=28, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87),
+                                    ft.Text("Portal de Censo e Inscripción", size=28, weight=ft.FontWeight.BOLD, color=INCES_BLUE),
                                     ft.Container(
                                         width=500,
                                         bgcolor=ft.Colors.WHITE,
@@ -95,7 +95,7 @@ def login_view(page: ft.Page, on_register_click, on_login_success):
                                                 error_text,
                                                 ft.ElevatedButton(
                                                     "Ingresar",
-                                                    bgcolor=BLUE_PRIMARY,
+                                                    bgcolor=INCES_TEAL,
                                                     color=ft.Colors.WHITE,
                                                     width=430,
                                                     height=45,

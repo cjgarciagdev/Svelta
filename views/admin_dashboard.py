@@ -1,27 +1,43 @@
 import flet as ft
-from config.theme import BLUE_PRIMARY
+from components.sidebar import create_sidebar
+from views.admin_users import admin_users_view
 
 def admin_dashboard_view(page: ft.Page, user, on_logout):
-    """Panel principal del Administrador."""
+    """Panel principal del Administrador (Cascarón)."""
     
-    return ft.Column(
+    # Este es el contenedor gigante a la derecha donde cambiarán las cosas
+    content_area = ft.Container(
         expand=True,
+        padding=30,
+        bgcolor=ft.Colors.WHITE,
+        content=ft.Column([
+            ft.Text("Bienvenido al Panel de Control", size=24, weight=ft.FontWeight.BOLD),
+            ft.Text("Selecciona una opción en el menú de la izquierda para comenzar.", size=14, color=ft.Colors.GREY_600)
+        ])
+    )
+
+    # Función mágica que se activa cuando haces clic en un botón del Sidebar
+    def handle_nav_change(view_name):
+        content_area.content.controls.clear()
+        
+        if view_name == "usuarios":
+            content_area.content.controls.append(admin_users_view(page, user))
+        elif view_name == "cursos":
+            content_area.content.controls.append(ft.Text("🛠️ Módulo de Cursos en construcción...", size=20))
+        elif view_name == "estudiantes":
+            content_area.content.controls.append(ft.Text("🛠️ Módulo de Estudiantes en construcción...", size=20))
+            
+        page.update()
+
+    # Retornamos una Fila: A la izquierda el Sidebar, a la derecha el Área de Contenido
+    return ft.Row(
+        expand=True,
+        spacing=0,
         controls=[
-            ft.Container(
-                padding=20,
-                bgcolor=ft.Colors.WHITE,
-                shadow=ft.BoxShadow(blur_radius=5, color=ft.Colors.BLACK12),
-                content=ft.Row(
-                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                    controls=[
-                        ft.Text(f"Panel de Administrador - Hola, {user['full_name']}", size=20, weight=ft.FontWeight.BOLD),
-                        ft.ElevatedButton("Cerrar Sesión", on_click=lambda _: on_logout(), bgcolor=ft.Colors.RED_400, color=ft.Colors.WHITE)
-                    ]
-                )
-            ),
-            ft.Container(
-                padding=20,
-                content=ft.Text("Aquí construiremos las tablas de usuarios y estudiantes.", size=16)
-            )
+            # 1. Nuestro nuevo menú lateral
+            create_sidebar(user=user, on_nav_change=handle_nav_change, on_logout=on_logout),
+            
+            # 2. El área dinámica
+            content_area
         ]
     )
