@@ -78,7 +78,7 @@ def login_view(page: ft.Page, on_register_click, on_login_success):
                                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                                 spacing=20,
                                 controls=[
-                                    ft.Text("Portal de Censo e Inscripción", size=28, weight=ft.FontWeight.BOLD, color=INCES_BLUE),
+                                    ft.Text("Portal Control de Censados", size=28, weight=ft.FontWeight.BOLD, color=INCES_BLUE),
                                     ft.Container(
                                         width=500,
                                         bgcolor=ft.Colors.WHITE,

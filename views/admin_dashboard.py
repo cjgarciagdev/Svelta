@@ -12,7 +12,6 @@ def admin_dashboard_view(page: ft.Page, user, on_logout):
         bgcolor=ft.Colors.WHITE,
         content=ft.Column([
             ft.Text("Bienvenido al Panel de Control", size=24, weight=ft.FontWeight.BOLD),
-            ft.Text("Selecciona una opción en el menú de la izquierda para comenzar.", size=14, color=ft.Colors.GREY_600)
         ])
     )
 
@@ -23,9 +22,9 @@ def admin_dashboard_view(page: ft.Page, user, on_logout):
         if view_name == "usuarios":
             content_area.content.controls.append(admin_users_view(page, user))
         elif view_name == "cursos":
-            content_area.content.controls.append(ft.Text("🛠️ Módulo de Cursos en construcción...", size=20))
+            content_area.content.controls.append(ft.Container())
         elif view_name == "estudiantes":
-            content_area.content.controls.append(ft.Text("🛠️ Módulo de Estudiantes en construcción...", size=20))
+            content_area.content.controls.append(ft.Container())
             
         page.update()
 
