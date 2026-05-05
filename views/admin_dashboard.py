@@ -2,6 +2,7 @@ import flet as ft
 from components.sidebar import create_sidebar
 from views.admin_users import admin_users_view
 from views.admin_cursos import admin_cursos_view
+from views.admin_estudiantes import admin_estudiantes_view
 
 
 def admin_dashboard_view(page: ft.Page, user, on_logout):
@@ -26,9 +27,9 @@ def admin_dashboard_view(page: ft.Page, user, on_logout):
         elif view_name == "cursos":
             content_area.content.controls.append(admin_cursos_view(page))
         elif view_name == "estudiantes":
-            content_area.content.controls.append(ft.Container())
+            content_area.content = admin_estudiantes_view(page)
             
-        page.update()
+        content_area.update()
 
     # Retornamos una Fila: A la izquierda el Sidebar, a la derecha el Área de Contenido
     return ft.Row(

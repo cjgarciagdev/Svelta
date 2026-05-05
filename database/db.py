@@ -1,5 +1,8 @@
 import sqlite3
 import os
+import json
+import urllib.request
+from urllib.error import URLError
 
 DB_NAME = "inces.sqlite"
 
@@ -163,3 +166,123 @@ def toggle_perfil_status(perfil_id, is_active):
     cursor.execute("UPDATE perfiles SET is_active = ? WHERE id = ?", (is_active, perfil_id))
     conn.commit()
     conn.close()
+
+def get_perfil_id_by_name(name):
+    """Busca el ID de un perfil por su nombre."""
+    if not name: return None
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM perfiles WHERE name LIKE ?", (f"%{name}%",))
+    row = cursor.fetchone()
+    conn.close()
+    return row['id'] if row else None
+
+def insert_or_update_estudiante(datos):
+    """Inserta o actualiza un estudiante validando por cédula y perfil_id."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    # 1. Obtener perfil_id basado en el nombre del curso
+    perfil_nombre = datos.get('perfil_nombre', '')
+    perfil_id = get_perfil_id_by_name(perfil_nombre)
+    
+    if not perfil_id and perfil_nombre:
+        # Si no existe el perfil pero nos llegó un nombre válido, lo creamos
+        try:
+            cursor.execute("INSERT INTO perfiles (name) VALUES (?)", (perfil_nombre,))
+            perfil_id = cursor.lastrowid
+        except sqlite3.IntegrityError:
+            perfil_id = get_perfil_id_by_name(perfil_nombre)
+        
+    try:
+        # Intentamos insertar. Si hay conflicto de cédula y perfil_id, se actualizan los datos
+        cursor.execute("""
+            INSERT INTO estudiantes (
+                nombres, apellidos, cedula, genero, edad, nivel_academico,
+                posee_discapacidad, cual_discapacidad, telefono, correo, 
+                direccion, perfil_id, fecha_censo
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(cedula, perfil_id) DO UPDATE SET
+                nombres=excluded.nombres,
+                apellidos=excluded.apellidos,
+                telefono=excluded.telefono,
+                correo=excluded.correo,
+                direccion=excluded.direccion
+        """, (
+            datos.get('nombres', ''),
+            datos.get('apellidos', ''),
+            str(datos.get('cedula', '')).strip(),
+            datos.get('genero', ''),
+            datos.get('edad', None),
+            datos.get('nivel_academico', ''),
+            1 if str(datos.get('posee_discapacidad', '')).lower() in ['sí', 'si', 'yes', 'true'] else 0,
+            datos.get('cual_discapacidad', ''),
+            str(datos.get('telefono', '')),
+            datos.get('correo', ''),
+            datos.get('direccion', ''),
+            perfil_id,
+            datos.get('fecha_censo', None)
+        ))
+        conn.commit()
+    except Exception as e:
+        print(f"Error insertando estudiante: {e}")
+    finally:
+        conn.close()
+
+def sync_google_forms(url, token):
+    """Obtiene datos del Google Script y los sincroniza en la BD."""
+    full_url = f"{url}?token={token}"
+    try:
+        req = urllib.request.Request(full_url)
+        with urllib.request.urlopen(req) as response:
+            if response.status == 200:
+                data = json.loads(response.read().decode('utf-8'))
+                if type(data) is dict and "error" in data:
+                    print(f"Error de API: {data['error']}")
+                    return False
+                
+                # Procesar cada fila
+                for row in data:
+                    mapped = {}
+                    for key, value in row.items():
+                        k_lower = str(key).lower()
+                        if "nombres" in k_lower: mapped['nombres'] = value
+                        elif "apellidos" in k_lower: mapped['apellidos'] = value
+                        elif "cedula" in k_lower or "cédula" in k_lower or "identidad" in k_lower: mapped['cedula'] = value
+                        elif "genero" in k_lower or "género" in k_lower: mapped['genero'] = value
+                        elif "edad" in k_lower: 
+                            try: mapped['edad'] = int(value)
+                            except: mapped['edad'] = 0
+                        elif "nivel acad" in k_lower: mapped['nivel_academico'] = value
+                        elif "posee alguna discap" in k_lower: mapped['posee_discapacidad'] = value
+                        elif "indique cu" in k_lower: mapped['cual_discapacidad'] = value
+                        elif "teléfono" in k_lower or "telefono" in k_lower: mapped['telefono'] = value
+                        elif "correo" in k_lower: mapped['correo'] = value
+                        elif "dirección" in k_lower or "direccion" in k_lower: mapped['direccion'] = value
+                        elif "p.p.l" in k_lower or "perfil" in k_lower or "opcion de" in k_lower: mapped['perfil_nombre'] = value
+                        elif "marca temporal" in k_lower: mapped['fecha_censo'] = value
+                    
+                    if 'cedula' in mapped and mapped['cedula']:
+                        insert_or_update_estudiante(mapped)
+                return True
+            return False
+    except URLError as e:
+        print(f"Error de red al sincronizar: {e}")
+        return False
+    except Exception as e:
+        print(f"Error general en sincronización: {e}")
+        return False
+
+def get_all_estudiantes():
+    """Obtiene todos los estudiantes con sus respectivos perfiles."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT e.*, p.name as perfil_nombre 
+        FROM estudiantes e
+        LEFT JOIN perfiles p ON e.perfil_id = p.id
+        ORDER BY e.fecha_censo DESC
+    """)
+    estudiantes = cursor.fetchall()
+    conn.close()
+    return estudiantes
