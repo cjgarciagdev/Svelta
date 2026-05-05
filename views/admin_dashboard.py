@@ -1,6 +1,8 @@
 import flet as ft
 from components.sidebar import create_sidebar
 from views.admin_users import admin_users_view
+from views.admin_cursos import admin_cursos_view
+
 
 def admin_dashboard_view(page: ft.Page, user, on_logout):
     """Panel principal del Administrador (Cascarón)."""
@@ -22,7 +24,7 @@ def admin_dashboard_view(page: ft.Page, user, on_logout):
         if view_name == "usuarios":
             content_area.content.controls.append(admin_users_view(page, user))
         elif view_name == "cursos":
-            content_area.content.controls.append(ft.Container())
+            content_area.content.controls.append(admin_cursos_view(page))
         elif view_name == "estudiantes":
             content_area.content.controls.append(ft.Container())
             

@@ -133,3 +133,33 @@ def update_user_role(user_id, new_role):
     cursor.execute("UPDATE users SET role = ? WHERE id = ?", (new_role, user_id))
     conn.commit()
     conn.close()
+
+def create_perfil(name):
+    """Crea un nuevo perfil (curso) en la base de datos."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("INSERT INTO perfiles (name) VALUES (?)", (name,))
+        conn.commit()
+        return True
+    except sqlite3.IntegrityError:
+        return False
+    finally:
+        conn.close()
+
+def get_all_perfiles():
+    """Obtiene todos los perfiles registrados."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM perfiles ORDER BY id DESC")
+    perfiles = cursor.fetchall()
+    conn.close()
+    return perfiles
+
+def toggle_perfil_status(perfil_id, is_active):
+    """Activa o desactiva un perfil."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE perfiles SET is_active = ? WHERE id = ?", (is_active, perfil_id))
+    conn.commit()
+    conn.close()
