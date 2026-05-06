@@ -245,6 +245,10 @@ def sync_google_forms(url, token):
                 for row in data:
                     mapped = {}
                     for key, value in row.items():
+                        # Si la celda está vacía en Google Sheets, la ignoramos para que no sobreescriba una válida
+                        if str(value).strip() == "":
+                            continue
+                            
                         k_lower = str(key).lower()
                         if "nombres" in k_lower: mapped['nombres'] = value
                         elif "apellidos" in k_lower: mapped['apellidos'] = value
