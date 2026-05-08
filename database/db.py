@@ -307,3 +307,36 @@ def get_all_estudiantes():
     estudiantes = cursor.fetchall()
     conn.close()
     return estudiantes
+
+def get_stats():
+    """Obtiene estadísticas básicas para el dashboard."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    # Total estudiantes
+    cursor.execute("SELECT COUNT(*) FROM estudiantes")
+    total = cursor.fetchone()[0]
+    
+    # Por Género
+    cursor.execute("SELECT genero, COUNT(*) FROM estudiantes GROUP BY genero")
+    generos = cursor.fetchall()
+    
+    # Por Discapacidad
+    cursor.execute("SELECT posee_discapacidad, COUNT(*) FROM estudiantes GROUP BY posee_discapacidad")
+    discapacidades = cursor.fetchall()
+
+     # NUEVO: Top 5 Cursos con mayor demanda
+    cursor.execute("""
+        SELECT p.name, COUNT(e.id) as cantidad
+        FROM perfiles p
+        LEFT JOIN estudiantes e ON p.id = e.perfil_id
+        GROUP BY p.id
+        ORDER BY cantidad DESC
+        LIMIT 5
+    """)
+    cursos_top = cursor.fetchall()
+    
+    conn.close()
+    # Actualiza el return para incluir "cursos"
+    return {"total": total, "generos": generos, "discapacidades": discapacidades, "cursos": cursos_top}
+    

@@ -3,6 +3,8 @@ from components.sidebar import create_sidebar
 from views.admin_users import admin_users_view
 from views.admin_cursos import admin_cursos_view
 from views.admin_estudiantes import admin_estudiantes_view
+from views.admin_home import admin_home_view
+
 
 
 def admin_dashboard_view(page: ft.Page, user, on_logout):
@@ -11,10 +13,9 @@ def admin_dashboard_view(page: ft.Page, user, on_logout):
     # Este es el contenedor gigante a la derecha donde cambiarán las cosas
     content_area = ft.Container(
         expand=True,
-        padding=30,
-        bgcolor=ft.Colors.WHITE,
+        bgcolor=ft.Colors.GREY_50,
         content=ft.Column([
-            ft.Text("Bienvenido al Panel de Control", size=24, weight=ft.FontWeight.BOLD),
+            admin_home_view(page) # Cargamos el dashboard como primera vista!
         ])
     )
 
@@ -22,7 +23,9 @@ def admin_dashboard_view(page: ft.Page, user, on_logout):
     def handle_nav_change(view_name):
         content_area.content.controls.clear()
         
-        if view_name == "usuarios":
+        if view_name == "inicio":
+            content_area.content.controls.append(admin_home_view(page))
+        elif view_name == "usuarios":
             content_area.content.controls.append(admin_users_view(page, user))
         elif view_name == "cursos":
             content_area.content.controls.append(admin_cursos_view(page))
@@ -30,6 +33,7 @@ def admin_dashboard_view(page: ft.Page, user, on_logout):
             content_area.content = admin_estudiantes_view(page)
             
         content_area.update()
+
 
     # Retornamos una Fila: A la izquierda el Sidebar, a la derecha el Área de Contenido
     return ft.Row(
@@ -43,3 +47,6 @@ def admin_dashboard_view(page: ft.Page, user, on_logout):
             content_area
         ]
     )
+
+        
+        

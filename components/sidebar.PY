@@ -42,6 +42,7 @@ def create_sidebar(user, on_nav_change, on_logout):
                 ft.Container(height=20),
                 
                 # BOTONES DE NAVEGACIÓN
+                nav_button(ft.Icons.HOME, "Inicio", "inicio"),
                 nav_button(ft.Icons.PEOPLE_ALT, "Usuarios", "usuarios"),
                 nav_button(ft.Icons.LIBRARY_BOOKS, "Perfiles", "cursos"),
                 nav_button(ft.Icons.BADGE, "Estudiantes Censados", "estudiantes"),

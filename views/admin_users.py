@@ -91,8 +91,8 @@ def admin_users_view(page: ft.Page, current_user):
             if user["id"] != 1:
                 acciones_lista.append(
                     ft.IconButton(
-                        icon=ft.Icons.PERSON_REMOVE,
-                        icon_color=ft.Colors.RED_700,
+                        icon=ft.Icons.DELETE_FOREVER_OUTLINED, 
+                        icon_color=ft.Colors.RED_400,
                         tooltip="Eliminar Usuario",
                         data={"id": user["id"]},
                         on_click=lambda e: open_delete_dialog(e.control.data["id"])
