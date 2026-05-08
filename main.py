@@ -14,8 +14,11 @@ def main(page: ft.Page):
     page.window.height = 700
     page.window.min_width = 800
     page.window.min_height = 550
-    page.window.center()
-    page.bgcolor = PAGE_BG
+    
+    # Configurar ventana para el splash screen
+    page.window.frameless = True
+    page.bgcolor = ft.Colors.TRANSPARENT
+    page.window.bgcolor = ft.Colors.TRANSPARENT
     page.padding = 0
     page.spacing = 0
 
@@ -37,7 +40,42 @@ def main(page: ft.Page):
         page.clean()
         page.add(register_view(page, on_cancel_click=show_login))
 
-    # Mostrar login al iniciar
-    show_login()
+    def show_splash():
+        """Muestra una pantalla de carga (Splash Screen) con el logo."""
+        page.clean()
+        logo = ft.Image(src="Logo INCES.png", height=150, fit="contain", opacity=0, animate_opacity=1000)
+        page.add(
+            ft.Container(
+                content=logo,
+                alignment=ft.Alignment.CENTER,
+                expand=True
+            )
+        )
+        
+        def animate():
+            import time
+            # Animación de parpadeo (fade in / fade out)
+            time.sleep(0.2)
+            logo.opacity = 1
+            page.update()
+            time.sleep(1.5)
+            logo.opacity = 0
+            page.update()
+            time.sleep(1.0)
+            
+            # Restaurar ventana para la app
+            page.window.frameless = False
+            page.window.bgcolor = ft.Colors.WHITE
+            page.bgcolor = PAGE_BG
+            page.update()
+            
+            # Terminar splash y mostrar login
+            show_login()
 
-ft.run(main)
+        import threading
+        threading.Thread(target=animate, daemon=True).start()
+
+    # Mostrar splash al iniciar
+    show_splash()
+
+ft.app(target=main, assets_dir=".")

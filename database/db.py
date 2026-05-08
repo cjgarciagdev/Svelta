@@ -86,20 +86,19 @@ def count_users():
     conn.close()
     return result["total"]
 
-def create_user(full_name, email, password_hash, role, status):
+def create_user(nombres, apellidos, cedula, email, password_hash, role, status):
     """Crea un nuevo usuario en la base de datos."""
     conn = get_connection()
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "INSERT INTO users (full_name, email, password_hash, role, status) VALUES (?, ?, ?, ?, ?)",
-            (full_name, email, password_hash, role, status)
+            "INSERT INTO users (nombres, apellidos, cedula, email, password_hash, role, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (nombres, apellidos, cedula, email, password_hash, role, status)
         )
         conn.commit()
         return True
     except sqlite3.IntegrityError:
-        # Esto ocurre si el correo ya existe
-        return False
+        return False  # El correo o cédula ya existe
     finally:
         conn.close()
 
@@ -116,7 +115,7 @@ def get_all_users():
     """Obtiene todos los usuarios de la base de datos."""
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users ORDER BY id DESC")
+    cursor.execute("SELECT id, nombres, apellidos, cedula, email, role, status FROM users ORDER BY id ASC")
     users = cursor.fetchall()
     conn.close()
     return users
@@ -136,6 +135,24 @@ def update_user_role(user_id, new_role):
     cursor.execute("UPDATE users SET role = ? WHERE id = ?", (new_role, user_id))
     conn.commit()
     conn.close()
+
+def delete_user(user_id):
+    """Elimina permanentemente un usuario de la base de datos."""
+    # Proteger al admin principal
+    if user_id == 1:
+        return False
+        
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        conn.commit()
+        return cursor.rowcount > 0
+    except Exception as e:
+        print(f"Error al eliminar usuario: {e}")
+        return False
+    finally:
+        conn.close()
 
 def create_perfil(name):
     """Crea un nuevo perfil (curso) en la base de datos."""

@@ -51,7 +51,7 @@ def login_view(page: ft.Page, on_register_click, on_login_success):
             return
             
         # ¡Login Exitoso!
-        error_text.value = f"¡Bienvenido {user['full_name']}! Entrando..."
+        error_text.value = f"¡Bienvenido {user['nombres']}! Entrando..."
         error_text.color = ft.Colors.GREEN_700
         error_text.visible = True
         page.update()

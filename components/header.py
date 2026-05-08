@@ -15,12 +15,9 @@ def create_header():
                 ft.Row(
                     spacing=8,
                     controls=[
-                        ft.Text("Inces", size=26, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
-                        ft.Text(
-                            "Instituto Nacional Capacitación\ny Educación Socialista",
-                            size=10,
-                            color=ft.Colors.WHITE,
-                            weight=ft.FontWeight.W_500,
+                        ft.Container(
+                            content=ft.Image(src="Logo INCES.png", height=45, fit="contain", scale=2.8),
+                            margin=ft.margin.only(left=30)
                         ),
                     ],
                 ),

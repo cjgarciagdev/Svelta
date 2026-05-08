@@ -1,5 +1,5 @@
 import flet as ft
-from database.db import get_all_users, update_user_status, update_user_role
+from database.db import get_all_users, update_user_status, update_user_role, delete_user
 from config.theme import INCES_TEAL, INCES_BLUE
 
 def admin_users_view(page: ft.Page, current_user):
@@ -9,7 +9,9 @@ def admin_users_view(page: ft.Page, current_user):
     users_table = ft.DataTable(
         columns=[
             ft.DataColumn(ft.Text("ID", weight=ft.FontWeight.BOLD)),
-            ft.DataColumn(ft.Text("Nombre", weight=ft.FontWeight.BOLD)),
+            ft.DataColumn(ft.Text("Cédula", weight=ft.FontWeight.BOLD)),
+            ft.DataColumn(ft.Text("Nombres", weight=ft.FontWeight.BOLD)),
+            ft.DataColumn(ft.Text("Apellidos", weight=ft.FontWeight.BOLD)),
             ft.DataColumn(ft.Text("Correo", weight=ft.FontWeight.BOLD)),
             ft.DataColumn(ft.Text("Rol", weight=ft.FontWeight.BOLD)),
             ft.DataColumn(ft.Text("Estado", weight=ft.FontWeight.BOLD)),
@@ -73,13 +75,27 @@ def admin_users_view(page: ft.Page, current_user):
                     )
                 ])
             elif user["role"] == "ADMIN":
+                # Botón para degradar a FORMADOR (solo si no es el admin principal)
+                if user["id"] != 1:
+                    acciones_lista.append(
+                        ft.IconButton(
+                            icon=ft.Icons.REMOVE_MODERATOR, 
+                            icon_color=ft.Colors.RED_400, 
+                            tooltip="Quitar permisos de Admin",
+                            data={"id": user["id"], "role": "FORMADOR"},
+                            on_click=handle_role_change
+                        )
+                    )
+            
+            # Botón de eliminar (disponible para todos menos el admin principal)
+            if user["id"] != 1:
                 acciones_lista.append(
                     ft.IconButton(
-                        icon=ft.Icons.REMOVE_MODERATOR, 
-                        icon_color=ft.Colors.RED_400, 
-                        tooltip="Quitar permisos de Admin",
-                        data={"id": user["id"], "role": "FORMADOR"},
-                        on_click=handle_role_change
+                        icon=ft.Icons.PERSON_REMOVE,
+                        icon_color=ft.Colors.RED_700,
+                        tooltip="Eliminar Usuario",
+                        data={"id": user["id"]},
+                        on_click=lambda e: open_delete_dialog(e.control.data["id"])
                     )
                 )
 
@@ -93,7 +109,9 @@ def admin_users_view(page: ft.Page, current_user):
                 ft.DataRow(
                     cells=[
                         ft.DataCell(ft.Text(str(user["id"]))),
-                        ft.DataCell(ft.Text(user["full_name"])),
+                        ft.DataCell(ft.Text(user["cedula"])),
+                        ft.DataCell(ft.Text(user["nombres"])),
+                        ft.DataCell(ft.Text(user["apellidos"])),
                         ft.DataCell(ft.Text(user["email"])),
                         ft.DataCell(ft.Text(user["role"])),
                         ft.DataCell(estado_chip),
@@ -102,6 +120,26 @@ def admin_users_view(page: ft.Page, current_user):
                 )
             )
         
+        page.update()
+
+    def open_delete_dialog(user_id):
+        """Muestra un diálogo de confirmación antes de eliminar."""
+        def confirm_delete(e):
+            delete_user(user_id)
+            dlg.open = False
+            page.update()
+            load_users()
+
+        dlg = ft.AlertDialog(
+            title=ft.Text("Confirmar Eliminación"),
+            content=ft.Text("¿Estás seguro de que deseas eliminar permanentemente a este usuario? Esta acción no se puede deshacer."),
+            actions=[
+                ft.TextButton("Cancelar", on_click=lambda _: setattr(dlg, "open", False) or page.update()),
+                ft.ElevatedButton("Eliminar", bgcolor=ft.Colors.RED_700, color=ft.Colors.WHITE, on_click=confirm_delete),
+            ],
+        )
+        page.dialog = dlg
+        dlg.open = True
         page.update()
 
     def handle_status_change(e):

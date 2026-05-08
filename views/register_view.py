@@ -9,7 +9,8 @@ def register_view(page: ft.Page, on_cancel_click):
     """Vista de Registro / Crear Nueva Cuenta."""
 
     # 1. Creamos las variables para atrapar los datos
-    name_field = ft.TextField(label="Nombre Completo", border_color=ft.Colors.GREY_300, border_radius=8, focused_border_color=INCES_TEAL, text_size=14)
+    name_field = ft.TextField(label="Nombres", border_color=ft.Colors.GREY_300, border_radius=8, focused_border_color=INCES_TEAL, text_size=14)
+    apellido_field = ft.TextField(label="Apellidos", border_color=ft.Colors.GREY_300, border_radius=8, focused_border_color=INCES_TEAL, text_size=14)
     cedula_field = ft.TextField(label="Cédula", border_color=ft.Colors.GREY_300, border_radius=8, focused_border_color=INCES_TEAL, text_size=14)
     email_field = ft.TextField(label="Correo Electrónico", border_color=ft.Colors.GREY_300, border_radius=8, focused_border_color=INCES_TEAL, text_size=14)
     password_field = ft.TextField(label="Contraseña", password=True, can_reveal_password=True, border_color=ft.Colors.GREY_300, border_radius=8, focused_border_color=INCES_TEAL, text_size=14)
@@ -17,7 +18,7 @@ def register_view(page: ft.Page, on_cancel_click):
     # 2. Función que se ejecuta al darle al botón
     def handle_register(e):
         # Validar que no estén vacíos
-        if not name_field.value or not email_field.value or not password_field.value or not cedula_field.value:
+        if not name_field.value or not apellido_field.value or not email_field.value or not password_field.value or not cedula_field.value:
             page.snack_bar = ft.SnackBar(ft.Text("Por favor completa todos los campos."), bgcolor=ft.Colors.RED_700)
             page.snack_bar.open = True
             page.update()
@@ -32,7 +33,7 @@ def register_view(page: ft.Page, on_cancel_click):
         status = "APPROVED" if is_first else "PENDING"
 
         # Guardar en base de datos
-        success = create_user(name_field.value, email_field.value, hashed_pw, role, status)
+        success = create_user(name_field.value, apellido_field.value, cedula_field.value, email_field.value, hashed_pw, role, status)
 
         if success:
             msg = "¡Admin creado con éxito!" if is_first else "¡Registro exitoso! Espera la aprobación de un Admin."
@@ -77,7 +78,10 @@ def register_view(page: ft.Page, on_cancel_click):
                                                 ft.Text("Datos del Usuario", size=22, weight=ft.FontWeight.W_500, color=ft.Colors.BLACK87),
                                                 
                                                 # Pasamos las variables a la vista
-                                                name_field,
+                                                ft.Row([
+                                                    ft.Container(name_field, expand=1),
+                                                    ft.Container(apellido_field, expand=1)
+                                                ]),
                                                 cedula_field,
                                                 email_field,
                                                 password_field,

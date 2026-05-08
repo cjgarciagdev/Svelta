@@ -29,7 +29,7 @@ def create_sidebar(user, on_nav_change, on_logout):
             controls=[
                 # HEADER DEL SIDEBAR
                 ft.Row([
-                    ft.Icon(ft.Icons.SCHOOL, color=INCES_TEAL, size=30),
+                    ft.Image(src="Logo INCES.png", height=40, fit="contain"),
                     ft.Text("INCES", size=24, weight=ft.FontWeight.BOLD, color=INCES_BLUE),
                 ], alignment=ft.MainAxisAlignment.CENTER),
                 
@@ -37,7 +37,7 @@ def create_sidebar(user, on_nav_change, on_logout):
                 
                 # DATOS DEL USUARIO
                 ft.Text("Administrador:", size=11, color=ft.Colors.GREY_500, weight=ft.FontWeight.BOLD),
-                ft.Text(user["full_name"], size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87),
+                ft.Text(f"{user['nombres']} {user['apellidos']}", size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87),
                 
                 ft.Container(height=20),
                 
