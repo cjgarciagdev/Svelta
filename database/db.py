@@ -27,9 +27,19 @@ def init_db():
             email TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL,
             role TEXT NOT NULL, -- 'ADMIN' o 'FORMADOR'
-            status TEXT NOT NULL -- 'PENDING', 'APPROVED', 'REJECTED'
+            status TEXT NOT NULL, -- 'PENDING', 'APPROVED', 'REJECTED'
+            was_formador INTEGER DEFAULT 0 -- 1 si fue ascendido de FORMADOR a ADMIN
         )
     """)
+    # Migración segura: agregar columna si no existe (para bases de datos antiguas)
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN was_formador INTEGER DEFAULT 0")
+        conn.commit()
+    except Exception:
+        pass
+    # Corregir registros existentes: todo ADMIN que no sea el principal (id=1) fue formador
+    cursor.execute("UPDATE users SET was_formador = 1 WHERE role = 'ADMIN' AND id != 1 AND was_formador = 0")
+    conn.commit()
 
     # 2. Tabla de Perfiles (Cursos)
     cursor.execute("""
@@ -115,7 +125,7 @@ def get_all_users():
     """Obtiene todos los usuarios de la base de datos."""
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, nombres, apellidos, cedula, email, role, status FROM users ORDER BY id ASC")
+    cursor.execute("SELECT id, nombres, apellidos, cedula, email, role, status, was_formador FROM users ORDER BY id ASC")
     users = cursor.fetchall()
     conn.close()
     return users
@@ -129,10 +139,15 @@ def update_user_status(user_id, new_status):
     conn.close()
 
 def update_user_role(user_id, new_role):
-    """Actualiza el rol de un usuario (ADMIN, FORMADOR)."""
+    """Actualiza el rol de un usuario. Si sube a ADMIN marca was_formador=1."""
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("UPDATE users SET role = ? WHERE id = ?", (new_role, user_id))
+    if new_role == "ADMIN":
+        # Ascender: marcar que fue formador
+        cursor.execute("UPDATE users SET role = ?, was_formador = 1 WHERE id = ?", (new_role, user_id))
+    else:
+        # Degradar: limpiar la marca
+        cursor.execute("UPDATE users SET role = ?, was_formador = 0 WHERE id = ?", (new_role, user_id))
     conn.commit()
     conn.close()
 
@@ -339,4 +354,68 @@ def get_stats():
     conn.close()
     # Actualiza el return para incluir "cursos"
     return {"total": total, "generos": generos, "discapacidades": discapacidades, "cursos": cursos_top}
+
+
+    # ==========================================
+# FUNCIONES DEL FLUJO DEL FORMADOR
+# ==========================================
+
+def assign_perfil_to_formador(formador_id, perfil_id):
+    """Asigna un perfil/curso a un formador."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("INSERT INTO formador_perfil (formador_id, perfil_id) VALUES (?, ?)", (formador_id, perfil_id))
+        conn.commit()
+        return True
+    except sqlite3.IntegrityError:
+        return False  # Ya estaba asignado
+    finally:
+        conn.close()
+
+def remove_perfil_from_formador(formador_id, perfil_id):
+    """Quita un perfil/curso de un formador."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM formador_perfil WHERE formador_id = ? AND perfil_id = ?", (formador_id, perfil_id))
+    conn.commit()
+    conn.close()
+
+def get_perfiles_by_formador(formador_id):
+    """Obtiene los perfiles/cursos asignados a un formador."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT p.* FROM perfiles p
+        INNER JOIN formador_perfil fp ON p.id = fp.perfil_id
+        WHERE fp.formador_id = ?
+        ORDER BY p.name
+    """, (formador_id,))
+    perfiles = cursor.fetchall()
+    conn.close()
+    return perfiles
+
+def get_estudiantes_by_formador(formador_id):
+    """Obtiene los estudiantes de TODOS los cursos asignados al formador."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT e.*, p.name as perfil_name FROM estudiantes e
+        INNER JOIN formador_perfil fp ON e.perfil_id = fp.perfil_id
+        INNER JOIN perfiles p ON e.perfil_id = p.id
+        WHERE fp.formador_id = ?
+        ORDER BY p.name, e.apellidos
+    """, (formador_id,))
+    estudiantes = cursor.fetchall()
+    conn.close()
+    return estudiantes
+
+def update_estado_inscripcion(estudiante_id, nuevo_estado):
+    """Actualiza el estado de inscripción de un estudiante."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE estudiantes SET estado_inscripcion = ? WHERE id = ?", (nuevo_estado, estudiante_id))
+    conn.commit()
+    conn.close()
+
     

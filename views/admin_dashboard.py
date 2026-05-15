@@ -35,13 +35,19 @@ def admin_dashboard_view(page: ft.Page, user, on_logout):
         content_area.update()
 
 
+    def handle_switch_view():
+        from views.formador_dashboard import formador_dashboard_view
+        page.clean()
+        page.add(formador_dashboard_view(page, user, on_logout=on_logout))
+        page.update()
+
     # Retornamos una Fila: A la izquierda el Sidebar, a la derecha el Área de Contenido
     return ft.Row(
         expand=True,
         spacing=0,
         controls=[
             # 1. Nuestro nuevo menú lateral
-            create_sidebar(user=user, on_nav_change=handle_nav_change, on_logout=on_logout),
+            create_sidebar(user=user, on_nav_change=handle_nav_change, on_logout=on_logout, on_switch_view=handle_switch_view),
             
             # 2. El área dinámica
             content_area

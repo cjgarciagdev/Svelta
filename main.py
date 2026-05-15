@@ -3,6 +3,7 @@ from config.theme import PAGE_BG
 from views.login_view import login_view
 from views.register_view import register_view
 from database.db import init_db
+from views.formador_dashboard import formador_dashboard_view
 from views.admin_dashboard import admin_dashboard_view
 
 def main(page: ft.Page):
@@ -28,7 +29,7 @@ def main(page: ft.Page):
         if user["role"] == "ADMIN":
             page.add(admin_dashboard_view(page, user, on_logout=show_login))
         else:
-            page.add(ft.Text("Panel de Formador en construcción..."))
+            page.add(formador_dashboard_view(page, user, on_logout=show_login))
 
     def show_login():
         """Muestra la vista de login."""

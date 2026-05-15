@@ -1,7 +1,7 @@
 import flet as ft
 from config.theme import INCES_TEAL, INCES_BLUE, SIDEBAR_BG
 
-def create_sidebar(user, on_nav_change, on_logout):
+def create_sidebar(user, on_nav_change, on_logout, on_switch_view=None):
     """Componente de barra lateral reutilizable."""
     
     # Función interna para crear botones de menú bonitos
@@ -61,8 +61,7 @@ def create_sidebar(user, on_nav_change, on_logout):
                     padding=ft.padding.symmetric(vertical=10, horizontal=15),
                     border_radius=8,
                     ink=True,
-                    # Usamos open para flet moderno o asignamos directamente
-                    on_click=lambda e: (setattr(e.page, "snack_bar", ft.SnackBar(ft.Text("🛠️ La vista de Formador se construirá pronto."))), setattr(e.page.snack_bar, "open", True), e.page.update())
+                    on_click=lambda _: on_switch_view() if on_switch_view else None
                 ) if user["role"] == "ADMIN" and user["id"] != 1 else ft.Container(),
                 
                 # BOTÓN DE SALIR

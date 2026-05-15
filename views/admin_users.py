@@ -1,5 +1,5 @@
 import flet as ft
-from database.db import get_all_users, update_user_status, update_user_role, delete_user
+from database.db import get_all_users, update_user_status, update_user_role, delete_user, get_all_perfiles, assign_perfil_to_formador, remove_perfil_from_formador, get_perfiles_by_formador
 from config.theme import INCES_TEAL, INCES_BLUE
 
 def admin_users_view(page: ft.Page, current_user):
@@ -66,17 +66,30 @@ def admin_users_view(page: ft.Page, current_user):
                         data={"id": user["id"], "status": "REJECTED"},
                         on_click=handle_status_change
                     ),
-                    ft.IconButton(
-                        icon=ft.Icons.ADMIN_PANEL_SETTINGS, 
-                        icon_color=INCES_TEAL, 
-                        tooltip="Hacer Administrador",
-                        data={"id": user["id"], "role": "ADMIN"},
-                        on_click=handle_role_change
-                    )
                 ])
+                # Solo el admin principal puede ascender
+                if current_user["id"] == 1:
+                    acciones_lista.append(
+                        ft.IconButton(
+                            icon=ft.Icons.ADMIN_PANEL_SETTINGS, 
+                            icon_color=INCES_TEAL, 
+                            tooltip="Hacer Administrador",
+                            data={"id": user["id"], "role": "ADMIN"},
+                            on_click=handle_role_change
+                        )
+                    )
+                acciones_lista.append(
+                    ft.IconButton(
+                        icon=ft.Icons.MENU_BOOK,
+                        icon_color=ft.Colors.BLUE_400,
+                        tooltip="Asignar Perfiles",
+                        data={"id": user["id"]},
+                        on_click=lambda e: open_assign_dialog(e.control.data["id"])
+                    )
+                )
             elif user["role"] == "ADMIN":
-                # Botón para degradar a FORMADOR (solo si no es el admin principal)
-                if user["id"] != 1:
+                # Solo el admin principal puede degradar (y no puede degradarse a sí mismo)
+                if user["id"] != 1 and current_user["id"] == 1:
                     acciones_lista.append(
                         ft.IconButton(
                             icon=ft.Icons.REMOVE_MODERATOR, 
@@ -112,8 +125,17 @@ def admin_users_view(page: ft.Page, current_user):
                         ft.DataCell(ft.Text(user["cedula"])),
                         ft.DataCell(ft.Text(user["nombres"])),
                         ft.DataCell(ft.Text(user["apellidos"])),
-                        ft.DataCell(ft.Text(user["email"])),
-                        ft.DataCell(ft.Text(user["role"])),
+                        ft.DataCell(ft.Text(dict(user).get("correo") or dict(user).get("email", ""))),
+                        ft.DataCell(ft.Container(
+                            content=ft.Text(
+                                "FORMADOR/ADMIN" if (user["role"] == "ADMIN" and dict(user).get("was_formador", 0) == 1) else user["role"],
+                                size=12, weight=ft.FontWeight.BOLD,
+                                color=INCES_TEAL if user["role"] == "ADMIN" else ft.Colors.BLACK87
+                            ),
+                            bgcolor=ft.Colors.TEAL_50 if user["role"] == "ADMIN" else ft.Colors.TRANSPARENT,
+                            padding=ft.padding.symmetric(horizontal=8, vertical=4),
+                            border_radius=10
+                        )),
                         ft.DataCell(estado_chip),
                         ft.DataCell(acciones),
                     ]
@@ -130,18 +152,69 @@ def admin_users_view(page: ft.Page, current_user):
             page.update()
             load_users()
 
+        def close_dlg(e):
+            dlg.open = False
+            page.update()
+
         dlg = ft.AlertDialog(
+            modal=True,
             title=ft.Text("Confirmar Eliminación"),
             content=ft.Text("¿Estás seguro de que deseas eliminar permanentemente a este usuario? Esta acción no se puede deshacer."),
             actions=[
-                ft.TextButton("Cancelar", on_click=lambda _: setattr(dlg, "open", False) or page.update()),
+                ft.TextButton("Cancelar", on_click=close_dlg),
                 ft.ElevatedButton("Eliminar", bgcolor=ft.Colors.RED_700, color=ft.Colors.WHITE, on_click=confirm_delete),
             ],
         )
-        page.dialog = dlg
+        page.overlay.append(dlg)
         dlg.open = True
         page.update()
 
+    def open_assign_dialog(user_id):
+        """Muestra un diálogo para asignar/quitar perfiles a un formador."""
+        perfiles = get_all_perfiles()
+        asignados = [p["id"] for p in get_perfiles_by_formador(user_id)]
+        
+        checks = []
+        for perfil in perfiles:
+            if not perfil["is_active"]:
+                continue
+            cb = ft.Checkbox(
+                label=perfil["name"],
+                value=(perfil["id"] in asignados),
+                data={"user_id": user_id, "perfil_id": perfil["id"]}
+            )
+            checks.append(cb)
+        
+        def save_assignments(e):
+            for cb in checks:
+                perfil_id = cb.data["perfil_id"]
+                if cb.value:
+                    assign_perfil_to_formador(user_id, perfil_id)
+                else:
+                    remove_perfil_from_formador(user_id, perfil_id)
+            dlg.open = False
+            page.update()
+            load_users()
+
+        def close_dlg(e):
+            dlg.open = False
+            page.update()
+        
+        dlg = ft.AlertDialog(
+            modal=True,
+            title=ft.Text("Asignar Perfiles"),
+            content=ft.Column(checks, tight=True, scroll=ft.ScrollMode.AUTO, height=300),
+            actions=[
+                ft.TextButton("Cancelar", on_click=close_dlg),
+                ft.ElevatedButton("Guardar", bgcolor=INCES_TEAL, color=ft.Colors.WHITE, on_click=save_assignments),
+            ],
+        )
+        page.overlay.append(dlg)
+        dlg.open = True
+        page.update()
+
+    
+    
     def handle_status_change(e):
         """Maneja el clic en los botones de Aprobar/Rechazar."""
         user_id = e.control.data["id"]
