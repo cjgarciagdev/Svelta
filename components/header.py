@@ -2,7 +2,7 @@ import flet as ft
 from config.theme import BLUE_PRIMARY
 
 
-def create_header():
+def create_header(on_login_click=None, on_register_click=None):
     """Barra superior azul con logo y menú del INCES."""
     return ft.Container(
         bgcolor=BLUE_PRIMARY,
@@ -21,28 +21,23 @@ def create_header():
                         ),
                     ],
                 ),
-                # Menú derecho
+                # Menú derecho (solo Crear cuenta e Iniciar Sesión)
                 ft.Row(
                     spacing=15,
                     controls=[
-                        ft.Text("Inicio", color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD, size=13),
-                        ft.Text("|", color=ft.Colors.WHITE, size=13),
-                        ft.Text("Formaciones", color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD, size=13),
                         ft.Container(
-                            bgcolor=ft.Colors.WHITE,
-                            border_radius=20,
-                            padding=ft.padding.symmetric(horizontal=12, vertical=6),
-                            content=ft.Row(
-                                spacing=10,
-                                controls=[
-                                    ft.Text("¿Qué te gustaría estudiar?", color=ft.Colors.GREY_500, size=12),
-                                    ft.Icon(ft.Icons.SEARCH, color=BLUE_PRIMARY, size=16),
-                                ],
-                            ),
+                            content=ft.Text("Crear cuenta", color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD, size=13),
+                            ink=True,
+                            on_click=lambda _: on_register_click() if on_register_click else None,
+                            on_hover=lambda e: setattr(e.control.content, "color", ft.Colors.WHITE70 if e.data == "true" else ft.Colors.WHITE) or e.control.update()
                         ),
-                        ft.Text("Crear cuenta", color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD, size=13),
                         ft.Text("|", color=ft.Colors.WHITE, size=13),
-                        ft.Text("Iniciar Sesión", color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD, size=13),
+                        ft.Container(
+                            content=ft.Text("Iniciar Sesión", color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD, size=13),
+                            ink=True,
+                            on_click=lambda _: on_login_click() if on_login_click else None,
+                            on_hover=lambda e: setattr(e.control.content, "color", ft.Colors.WHITE70 if e.data == "true" else ft.Colors.WHITE) or e.control.update()
+                        ),
                     ],
                 ),
             ],

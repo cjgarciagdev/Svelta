@@ -50,7 +50,7 @@ def register_view(page: ft.Page, on_cancel_click):
         expand=True,
         spacing=0,
         controls=[
-            create_header(),
+            create_header(on_login_click=on_cancel_click),
             ft.Container(
                 expand=True,
                 alignment=ft.Alignment.CENTER,

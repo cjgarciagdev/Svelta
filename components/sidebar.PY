@@ -29,8 +29,10 @@ def create_sidebar(user, on_nav_change, on_logout):
             controls=[
                 # HEADER DEL SIDEBAR
                 ft.Row([
-                    ft.Image(src="Logo INCES.png", height=40, fit="contain"),
-                    ft.Text("INCES", size=24, weight=ft.FontWeight.BOLD, color=INCES_BLUE),
+                    ft.Container(
+                        content=ft.Image(src="Logo INCES.png", height=40, fit="contain", scale=2.8),
+                        height=40,
+                    ),
                 ], alignment=ft.MainAxisAlignment.CENTER),
                 
                 ft.Divider(height=30, color=ft.Colors.GREY_300),
