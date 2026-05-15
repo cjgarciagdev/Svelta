@@ -59,7 +59,7 @@ def admin_home_view(page: ft.Page):
             ft.Row([
                 ft.Icon(ft.Icons.MENU_BOOK, size=16, color=INCES_TEAL),
                 ft.Text(curso, size=14, weight=ft.FontWeight.W_500, expand=True),
-                ft.Container(content=ft.Text(str(cantidad), size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE), bgcolor=INCES_BLUE, padding=ft.padding.symmetric(horizontal=8, vertical=4), border_radius=10)
+                ft.Container(content=ft.Text(str(cantidad), size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE), bgcolor=INCES_BLUE, padding=ft.Padding.symmetric(horizontal=8, vertical=4), border_radius=10)
             ])
         )
 

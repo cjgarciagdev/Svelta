@@ -11,7 +11,7 @@ def create_sidebar(user, on_nav_change, on_logout):
                 ft.Icon(icon, color=ft.Colors.BLACK54, size=20),
                 ft.Text(text, size=14, weight=ft.FontWeight.W_500, color=ft.Colors.BLACK87)
             ]),
-            padding=ft.padding.symmetric(vertical=12, horizontal=15),
+            padding=ft.Padding.symmetric(vertical=12, horizontal=15),
             border_radius=8,
             ink=True, # Efecto de onda al hacer clic
             on_click=lambda _: on_nav_change(view_name),
@@ -56,7 +56,7 @@ def create_sidebar(user, on_nav_change, on_logout):
                         ft.Icon(ft.Icons.SWAP_HORIZ, color=ft.Colors.BLUE_600, size=20),
                         ft.Text("Ver como Formador", size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_600)
                     ]),
-                    padding=ft.padding.symmetric(vertical=10, horizontal=15),
+                    padding=ft.Padding.symmetric(vertical=10, horizontal=15),
                     border_radius=8,
                     ink=True,
                     # Usamos open para flet moderno o asignamos directamente
@@ -70,7 +70,7 @@ def create_sidebar(user, on_nav_change, on_logout):
                         ft.Icon(ft.Icons.LOGOUT, color=ft.Colors.RED_400, size=20),
                         ft.Text("Cerrar Sesión", size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.RED_400)
                     ]),
-                    padding=ft.padding.symmetric(vertical=10, horizontal=15),
+                    padding=ft.Padding.symmetric(vertical=10, horizontal=15),
                     border_radius=8,
                     ink=True,
                     on_click=lambda _: on_logout()

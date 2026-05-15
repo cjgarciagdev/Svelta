@@ -56,7 +56,7 @@ def register_view(page: ft.Page, on_cancel_click):
                 alignment=ft.Alignment.CENTER,
                 content=ft.ListView(
                     expand=True,
-                    padding=ft.padding.symmetric(vertical=20, horizontal=20),
+                    padding=ft.Padding.symmetric(vertical=20, horizontal=20),
                     controls=[
                         ft.Container(
                             alignment=ft.Alignment.CENTER,

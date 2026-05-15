@@ -51,7 +51,7 @@ def admin_cursos_view(page: ft.Page):
                         ft.Container(
                             content=ft.Text(status_text, size=12, weight=ft.FontWeight.BOLD, color=status_color),
                             bgcolor=status_bg,
-                            padding=ft.padding.symmetric(horizontal=10, vertical=5),
+                            padding=ft.Padding.symmetric(horizontal=10, vertical=5),
                             border_radius=15
                         ),
                         ft.IconButton(

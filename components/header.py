@@ -6,7 +6,7 @@ def create_header():
     """Barra superior azul con logo y menú del INCES."""
     return ft.Container(
         bgcolor=BLUE_PRIMARY,
-        padding=ft.padding.symmetric(horizontal=20, vertical=12),
+        padding=ft.Padding.symmetric(horizontal=20, vertical=12),
         content=ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
@@ -17,7 +17,7 @@ def create_header():
                     controls=[
                         ft.Container(
                             content=ft.Image(src="Logo INCES.png", height=45, fit="contain", scale=2.8),
-                            margin=ft.margin.only(left=30)
+                            margin=ft.Margin.only(left=30)
                         ),
                     ],
                 ),
@@ -31,7 +31,7 @@ def create_header():
                         ft.Container(
                             bgcolor=ft.Colors.WHITE,
                             border_radius=20,
-                            padding=ft.padding.symmetric(horizontal=12, vertical=6),
+                            padding=ft.Padding.symmetric(horizontal=12, vertical=6),
                             content=ft.Row(
                                 spacing=10,
                                 controls=[

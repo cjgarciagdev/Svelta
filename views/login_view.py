@@ -70,7 +70,7 @@ def login_view(page: ft.Page, on_register_click, on_login_success):
                 alignment=ft.Alignment.CENTER,
                 content=ft.ListView(
                     expand=True,
-                    padding=ft.padding.symmetric(vertical=30, horizontal=20),
+                    padding=ft.Padding.symmetric(vertical=30, horizontal=20),
                     controls=[
                         ft.Container(
                             alignment=ft.Alignment.CENTER,

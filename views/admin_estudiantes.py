@@ -28,7 +28,7 @@ def admin_estudiantes_view(page: ft.Page):
     loading_ring = ft.Container(
         content=ft.ProgressRing(color=INCES_TEAL, width=20, height=20),
         visible=False,
-        margin=ft.margin.only(right=10)
+        margin=ft.Margin.only(right=10)
     )
 
     # Texto que muestra la última vez que se actualizó

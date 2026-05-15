@@ -43,7 +43,7 @@ def admin_users_view(page: ft.Page, current_user):
             estado_chip = ft.Container(
                 content=ft.Text(status_text, size=12, weight=ft.FontWeight.BOLD, color=text_color),
                 bgcolor=bg_color,
-                padding=ft.padding.symmetric(horizontal=10, vertical=5),
+                padding=ft.Padding.symmetric(horizontal=10, vertical=5),
                 border_radius=15
             )
 
