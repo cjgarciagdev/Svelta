@@ -4,7 +4,7 @@ from config.theme import INCES_BLUE, INCES_TEAL
 import time
 import threading
 
-GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby7QNF_2g2hgq0yyL-Pwop4z8-BrfxkOqJAbk2rnAtdjQkm4jHmN8togjqbzenDf5kw/exec"
+GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwux_BKbkRt41oIiMOZaP_XpWf-VaFhbBIrTW-cQfzItisPH_Bs9PSYUuy1A_L5gnP1Tw/exec"
 SCRIPT_TOKEN = "inces_admin_2026"
 
 def admin_estudiantes_view(page: ft.Page):

@@ -85,7 +85,7 @@ def init_db():
     """)
     conn.commit()
     conn.close()
-    print("✅ Base de datos verificada/inicializada correctamente.")
+    print("[OK] Base de datos verificada/inicializada correctamente.")
 
 def count_users():
     """Cuenta cuántos usuarios hay en la base de datos."""
@@ -284,7 +284,7 @@ def sync_google_forms(url, token):
                         k_lower = str(key).lower()
                         if "nombres" in k_lower: mapped['nombres'] = value
                         elif "apellidos" in k_lower: mapped['apellidos'] = value
-                        elif "cedula" in k_lower or "cédula" in k_lower or "identidad" in k_lower: mapped['cedula'] = value
+                        elif "cedula" in k_lower or "cédula" in k_lower or ("identidad" in k_lower and "tipo" not in k_lower): mapped['cedula'] = value
                         elif "genero" in k_lower or "género" in k_lower: mapped['genero'] = value
                         elif "edad" in k_lower: 
                             try: mapped['edad'] = int(value)
@@ -340,7 +340,7 @@ def get_stats():
     cursor.execute("SELECT posee_discapacidad, COUNT(*) FROM estudiantes GROUP BY posee_discapacidad")
     discapacidades = cursor.fetchall()
 
-     # NUEVO: Top 5 Cursos con mayor demanda
+    # Top 5 Cursos con mayor demanda
     cursor.execute("""
         SELECT p.name, COUNT(e.id) as cantidad
         FROM perfiles p
@@ -350,10 +350,48 @@ def get_stats():
         LIMIT 5
     """)
     cursos_top = cursor.fetchall()
+
+    # Por Trimestre (calculado en Python para evitar problemas de formato de fecha DD/MM/YYYY)
+    cursor.execute("SELECT fecha_censo FROM estudiantes")
+    fechas = cursor.fetchall()
     
+    trim_counts = {"1er Trimestre": 0, "2do Trimestre": 0, "3er Trimestre": 0, "4to Trimestre": 0}
+    for row in fechas:
+        fecha_str = str(row['fecha_censo']) if row['fecha_censo'] else ""
+        mes = 0
+        if '/' in fecha_str:
+            try: mes = int(fecha_str.split('/')[1])
+            except: pass
+        elif '-' in fecha_str:
+            try: mes = int(fecha_str.split('-')[1].split(' ')[0])
+            except: pass
+            
+        if 1 <= mes <= 3: trim_counts["1er Trimestre"] += 1
+        elif 4 <= mes <= 6: trim_counts["2do Trimestre"] += 1
+        elif 7 <= mes <= 9: trim_counts["3er Trimestre"] += 1
+        elif 10 <= mes <= 12: trim_counts["4to Trimestre"] += 1
+
+    trimestres = [(k, v) for k, v in trim_counts.items()]
+
+    # Todos los Perfiles con su conteo total de estudiantes
+    cursor.execute("""
+        SELECT p.name, COUNT(e.id) as cantidad
+        FROM perfiles p
+        LEFT JOIN estudiantes e ON p.id = e.perfil_id
+        GROUP BY p.id
+        ORDER BY cantidad DESC
+    """)
+    perfiles_todos = cursor.fetchall()
+
     conn.close()
-    # Actualiza el return para incluir "cursos"
-    return {"total": total, "generos": generos, "discapacidades": discapacidades, "cursos": cursos_top}
+    return {
+        "total": total,
+        "generos": generos,
+        "discapacidades": discapacidades,
+        "cursos": cursos_top,
+        "trimestres": trimestres,
+        "perfiles_todos": perfiles_todos,
+    }
 
 
     # ==========================================

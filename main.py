@@ -79,4 +79,4 @@ def main(page: ft.Page):
     # Mostrar splash al iniciar
     show_splash()
 
-ft.app(target=main, assets_dir=".")
+ft.run(main, assets_dir=".")
