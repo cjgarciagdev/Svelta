@@ -64,7 +64,7 @@ def login_view(page: ft.Page, on_register_click, on_login_success):
         expand=True,
         spacing=0,
         controls=[
-            create_header(),
+            create_header(on_register_click=on_register_click),
             ft.Container(
                 expand=True,
                 alignment=ft.Alignment.CENTER,
