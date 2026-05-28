@@ -135,7 +135,23 @@ def admin_home_view(page: ft.Page):
     grafico_trim = _build_bar_chart("Censados por Trimestre", total_estudiantes, datos_trimestres, _COLORES_TRIM)
     grafico_perfiles = _build_bar_chart("Perfiles Totales Censados", total_estudiantes, datos_perfiles, _COLORES_PERFILES)
 
-    # ── 4. Layout Final ────────────────────────────────────────────────────────
+    # ── 4. Tarjeta de Cursos más Demandados (junto a los gráficos)
+    lista_cursos = [ft.Text("Cursos con Mayor Demanda", size=16, weight=ft.FontWeight.BOLD, color=INCES_BLUE), ft.Divider(height=10, color=ft.Colors.GREY_300)]
+    for curso, cantidad in stats.get("cursos", []):
+        lista_cursos.append(
+            ft.Row([
+                ft.Icon(ft.Icons.MENU_BOOK, size=16, color=INCES_TEAL),
+                ft.Text(curso, size=14, weight=ft.FontWeight.W_500, expand=True),
+                ft.Container(content=ft.Text(str(cantidad), size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE), bgcolor=INCES_BLUE, padding=ft.Padding.symmetric(horizontal=8, vertical=4), border_radius=10)
+            ])
+        )
+
+    tarjeta_cursos = ft.Container(
+        bgcolor=ft.Colors.WHITE, padding=20, border_radius=15, shadow=ft.BoxShadow(blur_radius=10, color=ft.Colors.BLACK12),
+        content=ft.Column(lista_cursos)
+    )
+
+    # ── 5. Layout Final ────────────────────────────────────────────────────────
     return ft.Container(
         expand=True,
         padding=20,

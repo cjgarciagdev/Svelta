@@ -20,10 +20,22 @@ def init_db():
     cursor = conn.cursor()
 
     # 1. Tabla de Usuarios (Admins y Formadores)
+    # Se intenta migrar desde esquema antiguo (full_name) al nuevo (nombres, apellidos, cedula)
+    try:
+        cursor.execute("SELECT full_name FROM users LIMIT 1")
+        cursor.execute("ALTER TABLE users RENAME COLUMN full_name TO nombres")
+        cursor.execute("ALTER TABLE users ADD COLUMN apellidos TEXT DEFAULT ''")
+        cursor.execute("ALTER TABLE users ADD COLUMN cedula TEXT DEFAULT ''")
+        conn.commit()
+    except Exception:
+        pass
+
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            full_name TEXT NOT NULL,
+            nombres TEXT NOT NULL,
+            apellidos TEXT NOT NULL,
+            cedula TEXT NOT NULL,
             email TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL,
             role TEXT NOT NULL, -- 'ADMIN' o 'FORMADOR'

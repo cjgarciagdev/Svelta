@@ -1,8 +1,10 @@
 import flet as ft
 from database.db import get_all_estudiantes, sync_google_forms
 from config.theme import INCES_BLUE, INCES_TEAL
+from utils.report_generator import generate_estudiantes_report, generate_estudiantes_xlsx_report
 import time
 import threading
+import os
 
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwux_BKbkRt41oIiMOZaP_XpWf-VaFhbBIrTW-cQfzItisPH_Bs9PSYUuy1A_L5gnP1Tw/exec"
 SCRIPT_TOKEN = "inces_admin_2026"
@@ -28,7 +30,7 @@ def admin_estudiantes_view(page: ft.Page):
     loading_ring = ft.Container(
         content=ft.ProgressRing(color=INCES_TEAL, width=20, height=20),
         visible=False,
-        margin=ft.margin.only(right=10)
+        margin=ft.Margin.only(right=10)
     )
 
     # Texto que muestra la última vez que se actualizó
@@ -38,6 +40,71 @@ def admin_estudiantes_view(page: ft.Page):
         color=ft.Colors.GREY_600,
         italic=True
     )
+
+    def handle_generate_xlsx_report(e):
+        """Genera el reporte Excel con los datos actuales de la tabla."""
+        loading_ring.visible = True
+        page.update()
+
+        def _run():
+            try:
+                data = get_all_estudiantes()
+                path = generate_estudiantes_xlsx_report(list(data))
+                loading_ring.visible = False
+                page.snack_bar = ft.SnackBar(
+                    content=ft.Row([
+                        ft.Icon(ft.Icons.CHECK_CIRCLE, color=ft.Colors.WHITE),
+                        ft.Text(f"Reporte Excel generado: {os.path.basename(path)}", color=ft.Colors.WHITE),
+                    ]),
+                    bgcolor=ft.Colors.GREEN_700,
+                    duration=5000,
+                )
+                page.snack_bar.open = True
+                # Abrir la carpeta donde se guardó el Excel
+                os.startfile(os.path.dirname(path))
+            except Exception as ex:
+                loading_ring.visible = False
+                page.snack_bar = ft.SnackBar(
+                    content=ft.Text(f"Error al generar reporte Excel: {ex}", color=ft.Colors.WHITE),
+                    bgcolor=ft.Colors.RED_700,
+                )
+                page.snack_bar.open = True
+            page.update()
+
+        threading.Thread(target=_run, daemon=True).start()
+
+    def handle_generate_report(e):
+        """Genera el reporte PDF con los datos actuales de la tabla."""
+        loading_ring.visible = True
+        page.update()
+
+        def _run():
+            try:
+                data = get_all_estudiantes()
+                path = generate_estudiantes_report(list(data))
+                loading_ring.visible = False
+                page.snack_bar = ft.SnackBar(
+                    content=ft.Row([
+                        ft.Icon(ft.Icons.CHECK_CIRCLE, color=ft.Colors.WHITE),
+                        ft.Text(f"Reporte generado: {os.path.basename(path)}", color=ft.Colors.WHITE),
+                    ]),
+                    bgcolor=ft.Colors.GREEN_700,
+                    duration=5000,
+                )
+                page.snack_bar.open = True
+                # Abrir la carpeta donde se guardó el PDF
+                os.startfile(os.path.dirname(path))
+            except Exception as ex:
+                loading_ring.visible = False
+                page.snack_bar = ft.SnackBar(
+                    content=ft.Text(f"Error al generar reporte: {ex}", color=ft.Colors.WHITE),
+                    bgcolor=ft.Colors.RED_700,
+                )
+                page.snack_bar.open = True
+            page.update()
+
+        threading.Thread(target=_run, daemon=True).start()
+
 
     def load_table_data():
         """Carga los datos de la base de datos a la tabla visual."""
@@ -107,14 +174,40 @@ def admin_estudiantes_view(page: ft.Page):
         on_click=handle_sync
     )
 
+    # Botón de reporte PDF
+    report_btn = ft.ElevatedButton(
+        "Descargar Reporte PDF",
+        icon=ft.Icons.PICTURE_AS_PDF,
+        color=ft.Colors.WHITE,
+        bgcolor=INCES_TEAL,
+        on_click=handle_generate_report,
+        style=ft.ButtonStyle(
+            shape=ft.RoundedRectangleBorder(radius=8),
+        )
+    )
+
+    # Botón de reporte Excel
+    report_xlsx_btn = ft.ElevatedButton(
+        "Descargar Reporte Excel",
+        icon=ft.Icons.GRID_ON,
+        color=ft.Colors.WHITE,
+        bgcolor=ft.Colors.GREEN_700,
+        on_click=handle_generate_xlsx_report,
+        style=ft.ButtonStyle(
+            shape=ft.RoundedRectangleBorder(radius=8),
+        )
+    )
+
     header = ft.Row(
         controls=[
             ft.Text("Estudiantes Censados", size=24, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87),
             ft.Row([
                 last_sync_text,
                 loading_ring,
-                sync_btn
-            ], alignment=ft.MainAxisAlignment.END)
+                sync_btn,
+                report_btn,
+                report_xlsx_btn,
+            ], alignment=ft.MainAxisAlignment.END, spacing=8)
         ],
         alignment=ft.MainAxisAlignment.SPACE_BETWEEN
     )
