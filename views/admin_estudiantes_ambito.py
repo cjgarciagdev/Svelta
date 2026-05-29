@@ -7,10 +7,10 @@ import threading
 import os
 import math
 
-GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwux_BKbkRt41oIiMOZaP_XpWf-VaFhbBIrTW-cQfzItisPH_Bs9PSYUuy1A_L5gnP1Tw/exec"
-SCRIPT_TOKEN = "inces_admin_2026"
+GOOGLE_SCRIPT_URL_AMBITO = "https://script.google.com/macros/s/AKfycbweM1zIrHOPvhSFNggExghoUHzRo9cUfkBr5CBO4cwl0i4PKWu6pxIwXABOnovEda4_/exec"
+SCRIPT_TOKEN_AMBITO = "inces_admin_2026"
 
-def admin_estudiantes_view(page: ft.Page):
+def admin_estudiantes_ambito_view(page: ft.Page):
     state = {
         "current_page": 1,
         "items_per_page": 8,
@@ -24,7 +24,7 @@ def admin_estudiantes_view(page: ft.Page):
         prefix_icon=ft.Icons.SEARCH,
         border_radius=8,
         border_color=ft.Colors.GREY_300,
-        focused_border_color=INCES_TEAL,
+        focused_border_color=ft.Colors.PURPLE_600,
         height=40,
         text_size=13,
         expand=True,
@@ -46,7 +46,7 @@ def admin_estudiantes_view(page: ft.Page):
         text_size=13,
         border_radius=8,
         border_color=ft.Colors.GREY_300,
-        focused_border_color=INCES_TEAL,
+        focused_border_color=ft.Colors.PURPLE_600,
         on_select=lambda e: handle_filter_change()
     )
 
@@ -58,7 +58,7 @@ def admin_estudiantes_view(page: ft.Page):
         text_size=13,
         border_radius=8,
         border_color=ft.Colors.GREY_300,
-        focused_border_color=INCES_TEAL,
+        focused_border_color=ft.Colors.PURPLE_600,
         on_select=lambda e: handle_filter_change()
     )
 
@@ -80,9 +80,9 @@ def admin_estudiantes_view(page: ft.Page):
             ft.DataColumn(ft.Text("Estado", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
         ],
         rows=[],
-        border=ft.border.all(1, INCES_TEAL),
+        border=ft.border.all(1, ft.Colors.PURPLE_200),
         border_radius=10,
-        heading_row_color=ft.Colors.with_opacity(0.1, INCES_TEAL),
+        heading_row_color=ft.Colors.PURPLE_50,
         expand=True
     )
 
@@ -91,18 +91,18 @@ def admin_estudiantes_view(page: ft.Page):
     prev_btn = ft.IconButton(
         icon=ft.Icons.CHEVRON_LEFT,
         tooltip="Página anterior",
-        icon_color=INCES_TEAL,
+        icon_color=ft.Colors.PURPLE_600,
         on_click=lambda e: change_page(-1)
     )
     next_btn = ft.IconButton(
         icon=ft.Icons.CHEVRON_RIGHT,
         tooltip="Página siguiente",
-        icon_color=INCES_TEAL,
+        icon_color=ft.Colors.PURPLE_600,
         on_click=lambda e: change_page(1)
     )
 
     loading_ring = ft.Container(
-        content=ft.ProgressRing(color=INCES_TEAL, width=20, height=20),
+        content=ft.ProgressRing(color=ft.Colors.PURPLE_600, width=20, height=20),
         visible=False,
         margin=ft.Margin.only(right=10)
     )
@@ -215,8 +215,8 @@ def admin_estudiantes_view(page: ft.Page):
     def fetch_data():
         """Carga los datos de la base de datos a la tabla visual."""
         raw_data = get_all_estudiantes()
-        # Solo cargar los que son de GENERAL
-        state["all_data"] = [dict(r) for r in raw_data if dict(r).get('tipo_origen', 'GENERAL') == 'GENERAL']
+        # Solo cargar los que son de AMBITO
+        state["all_data"] = [dict(r) for r in raw_data if dict(r).get('tipo_origen', 'GENERAL') == 'AMBITO']
         handle_filter_change()
 
     def handle_generate_xlsx_report(e):
@@ -278,14 +278,14 @@ def admin_estudiantes_view(page: ft.Page):
             loading_ring.visible = True
             page.update()
 
-            success = sync_google_forms(GOOGLE_SCRIPT_URL, SCRIPT_TOKEN, tipo_origen="GENERAL")
+            success = sync_google_forms(GOOGLE_SCRIPT_URL_AMBITO, SCRIPT_TOKEN_AMBITO, tipo_origen="AMBITO")
 
             loading_ring.visible = False
             if success:
                 last_sync_text.value = f"Última actualización: {time.strftime('%I:%M %p')}"
                 fetch_data()
                 if e is not None:
-                    page.snack_bar = ft.SnackBar(ft.Text("Datos del Censo CFS sincronizados"), bgcolor=ft.Colors.GREEN_700)
+                    page.snack_bar = ft.SnackBar(ft.Text("Datos de Ámbito sincronizados"), bgcolor=ft.Colors.GREEN_700)
                     page.snack_bar.open = True
             else:
                 page.snack_bar = ft.SnackBar(ft.Text("Error al sincronizar. Revisa tu conexión."), bgcolor=ft.Colors.RED_700)
@@ -296,13 +296,13 @@ def admin_estudiantes_view(page: ft.Page):
         threading.Thread(target=_do_sync, daemon=True).start()
 
     # Botones principales
-    sync_btn = ft.ElevatedButton("Refrescar General", icon=ft.Icons.SYNC, color=ft.Colors.WHITE, bgcolor=INCES_BLUE, on_click=handle_sync)
+    sync_btn = ft.ElevatedButton("Refrescar Ámbito", icon=ft.Icons.SYNC, color=ft.Colors.WHITE, bgcolor=ft.Colors.PURPLE_600, on_click=handle_sync)
     report_btn = ft.ElevatedButton("PDF", icon=ft.Icons.PICTURE_AS_PDF, color=ft.Colors.WHITE, bgcolor=INCES_TEAL, on_click=handle_generate_report, style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)))
     report_xlsx_btn = ft.ElevatedButton("Excel", icon=ft.Icons.GRID_ON, color=ft.Colors.WHITE, bgcolor=ft.Colors.GREEN_700, on_click=handle_generate_xlsx_report, style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)))
 
     header = ft.Row(
         controls=[
-            ft.Text("Censo CFS", size=24, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87),
+            ft.Text("Censo de Otros Ámbitos", size=24, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87),
             ft.Row([
                 last_sync_text, loading_ring, sync_btn, report_btn, report_xlsx_btn
             ], alignment=ft.MainAxisAlignment.END, spacing=8)

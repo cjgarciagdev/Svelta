@@ -91,10 +91,18 @@ def init_db():
             perfil_id INTEGER,
             estado_inscripcion TEXT DEFAULT 'CENSADO', -- 'CENSADO', 'INSCRITO', 'CULMINADO', 'RETIRADO'
             fecha_censo DATETIME DEFAULT CURRENT_TIMESTAMP,
+            tipo_origen TEXT DEFAULT 'GENERAL', -- 'GENERAL' o 'AMBITO'
             FOREIGN KEY(perfil_id) REFERENCES perfiles(id) ON DELETE SET NULL,
             UNIQUE (cedula, perfil_id)
         )
     """)
+    
+    # Migración: agregar tipo_origen a bases de datos antiguas
+    try:
+        cursor.execute("ALTER TABLE estudiantes ADD COLUMN tipo_origen TEXT DEFAULT 'GENERAL'")
+    except Exception:
+        pass
+
     conn.commit()
     conn.close()
     print("[OK] Base de datos verificada/inicializada correctamente.")
@@ -244,14 +252,15 @@ def insert_or_update_estudiante(datos):
             INSERT INTO estudiantes (
                 nombres, apellidos, cedula, genero, edad, nivel_academico,
                 posee_discapacidad, cual_discapacidad, telefono, correo, 
-                direccion, perfil_id, fecha_censo
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                direccion, perfil_id, fecha_censo, tipo_origen
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(cedula, perfil_id) DO UPDATE SET
                 nombres=excluded.nombres,
                 apellidos=excluded.apellidos,
                 telefono=excluded.telefono,
                 correo=excluded.correo,
-                direccion=excluded.direccion
+                direccion=excluded.direccion,
+                tipo_origen=excluded.tipo_origen
         """, (
             datos.get('nombres', ''),
             datos.get('apellidos', ''),
@@ -265,7 +274,8 @@ def insert_or_update_estudiante(datos):
             datos.get('correo', ''),
             datos.get('direccion', ''),
             perfil_id,
-            datos.get('fecha_censo', None)
+            datos.get('fecha_censo', None),
+            datos.get('tipo_origen', 'GENERAL')
         ))
         conn.commit()
     except Exception as e:
@@ -273,8 +283,8 @@ def insert_or_update_estudiante(datos):
     finally:
         conn.close()
 
-def sync_google_forms(url, token):
-    """Obtiene datos del Google Script y los sincroniza en la BD."""
+def sync_google_forms(url, token, tipo_origen="GENERAL"):
+    """Obtiene datos del Google Script y los sincroniza en la BD con su origen."""
     full_url = f"{url}?token={token}"
     try:
         req = urllib.request.Request(full_url)
@@ -311,6 +321,7 @@ def sync_google_forms(url, token):
                         elif "marca temporal" in k_lower: mapped['fecha_censo'] = value
                     
                     if 'cedula' in mapped and mapped['cedula']:
+                        mapped['tipo_origen'] = tipo_origen
                         insert_or_update_estudiante(mapped)
                 return True
             return False
@@ -329,7 +340,7 @@ def get_all_estudiantes():
         SELECT e.*, p.name as perfil_nombre 
         FROM estudiantes e
         LEFT JOIN perfiles p ON e.perfil_id = p.id
-        ORDER BY e.fecha_censo DESC
+        ORDER BY e.fecha_censo ASC
     """)
     estudiantes = cursor.fetchall()
     conn.close()
