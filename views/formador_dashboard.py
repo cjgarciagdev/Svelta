@@ -86,7 +86,7 @@ def formador_dashboard_view(page: ft.Page, user, on_logout):
                         ft.dropdown.Option("RETIRADO"),
                     ],
                     data=est["id"],
-                    on_change=lambda e: handle_estado_change(e.control.data, e.control.value)
+                    on_select=lambda e: handle_estado_change(e.control.data, e.control.value)
                 )
 
                 tabla.rows.append(ft.DataRow(cells=[

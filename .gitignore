@@ -5,6 +5,7 @@ __pycache__/
 # Base de datos
 *.sqlite
 *.db
+inces.sqlite
 
 # Flet / OS
 .flet/

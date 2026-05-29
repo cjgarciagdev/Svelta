@@ -156,8 +156,10 @@ def generate_estudiantes_report(estudiantes: list, output_path: str | None = Non
                      'reports/' dentro de la raíz del proyecto.
 
     Returns:
-        Ruta absoluta del archivo PDF generado.
     """
+    # Convertir a dict para asegurar que .get() funciona en toda la función
+    estudiantes = [dict(est) if not isinstance(est, dict) else est for est in estudiantes]
+
     # Determinar ruta de salida
     if output_path is None:
         base_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
@@ -343,6 +345,9 @@ def generate_estudiantes_xlsx_report(estudiantes: list, output_path: str | None 
     import openpyxl
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
     from openpyxl.utils import get_column_letter
+
+    # Convertir a dict para asegurar que .get() funciona en toda la función
+    estudiantes = [dict(est) if not isinstance(est, dict) else est for est in estudiantes]
 
     # Determinar ruta de salida
     if output_path is None:
