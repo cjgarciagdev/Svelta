@@ -72,7 +72,7 @@ def formador_dashboard_view(page: ft.Page, user, on_logout):
 
                 estado_chip = ft.Container(
                     content=ft.Text(estado, size=11, weight=ft.FontWeight.BOLD, color=tc),
-                    bgcolor=bc, padding=ft.padding.symmetric(horizontal=8, vertical=4), border_radius=12
+                    bgcolor=bc, padding=ft.padding.Padding(left=8, top=4, right=8, bottom=4), border_radius=12
                 )
 
                 # Dropdown para cambiar estado
@@ -108,7 +108,7 @@ def formador_dashboard_view(page: ft.Page, user, on_logout):
                         ft.Text(perfil["name"], size=20, weight=ft.FontWeight.BOLD, color=INCES_BLUE),
                         ft.Container(
                             content=ft.Text(f"{len(estudiantes_perfil)} estudiantes", size=12, color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD),
-                            bgcolor=INCES_TEAL, padding=ft.padding.symmetric(horizontal=10, vertical=5), border_radius=12
+                            bgcolor=INCES_TEAL, padding=ft.padding.Padding(left=10, top=5, right=10, bottom=5), border_radius=12
                         )
                     ]),
                     ft.Divider(height=10, color=ft.Colors.GREY_300),
@@ -129,7 +129,7 @@ def formador_dashboard_view(page: ft.Page, user, on_logout):
     # Sidebar del formador
     sidebar = ft.Container(
         width=250, bgcolor=SIDEBAR_BG, padding=20,
-        border=ft.border.only(right=ft.border.BorderSide(1, ft.Colors.GREY_300)),
+        border=ft.border.Border.only(right=ft.border.BorderSide(1, ft.Colors.GREY_300)),
         content=ft.Column(expand=True, controls=[
             ft.Row([
                 ft.Container(
@@ -143,7 +143,7 @@ def formador_dashboard_view(page: ft.Page, user, on_logout):
             ft.Container(height=20),
             ft.Container(
                 content=ft.Row([ft.Icon(ft.Icons.HOME, color=ft.Colors.BLACK54, size=20), ft.Text("Mis Cursos", size=14, weight=ft.FontWeight.W_500)]),
-                padding=ft.padding.symmetric(vertical=12, horizontal=15), border_radius=8, ink=True,
+                padding=ft.padding.Padding(left=15, top=12, right=15, bottom=12), border_radius=8, ink=True,
                 on_click=lambda _: load_dashboard()
             ),
             ft.Container(expand=True),
@@ -151,14 +151,14 @@ def formador_dashboard_view(page: ft.Page, user, on_logout):
             # BOTÓN PARA VOLVER AL PANEL DE ADMIN (Solo si es ADMIN)
             ft.Container(
                 content=ft.Row([ft.Icon(ft.Icons.ADMIN_PANEL_SETTINGS, color=ft.Colors.BLUE_600, size=20), ft.Text("Volver a Admin", size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_600)]),
-                padding=ft.padding.symmetric(vertical=10, horizontal=15), border_radius=8, ink=True,
+                padding=ft.padding.Padding(left=15, top=10, right=15, bottom=10), border_radius=8, ink=True,
                 on_click=lambda _: back_to_admin()
             ) if user["role"] == "ADMIN" else ft.Container(),
 
             ft.Divider(height=20, color=ft.Colors.GREY_300),
             ft.Container(
                 content=ft.Row([ft.Icon(ft.Icons.LOGOUT, color=ft.Colors.RED_400, size=20), ft.Text("Cerrar Sesión", size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.RED_400)]),
-                padding=ft.padding.symmetric(vertical=10, horizontal=15), border_radius=8, ink=True,
+                padding=ft.padding.Padding(left=15, top=10, right=15, bottom=10), border_radius=8, ink=True,
                 on_click=lambda _: on_logout()
             )
         ])

@@ -77,7 +77,7 @@ def admin_estudiantes_view(page: ft.Page):
             ft.DataColumn(ft.Text("Estado", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
         ],
         rows=[],
-        border=ft.border.all(1, INCES_TEAL),
+        border=ft.border.Border.all(1, INCES_TEAL),
         border_radius=10,
         heading_row_color=ft.Colors.with_opacity(0.1, INCES_TEAL),
         expand=True
@@ -209,18 +209,18 @@ def admin_estudiantes_view(page: ft.Page):
         state["all_data"] = [dict(r) if not isinstance(r, dict) else r for r in raw_data]
         handle_filter_change()
 
-    def handle_generate_xlsx_report(e):
+    def handle_generate_xlsx_report(e, group_by_trimester=True):
         loading_ring.visible = True
         page.update()
+        label = "Trimestral" if group_by_trimester else "General"
         def _run():
             try:
-                # Generar el reporte SOLO con los datos filtrados
-                path = generate_estudiantes_xlsx_report(state["filtered_data"])
+                path = generate_estudiantes_xlsx_report(state["filtered_data"], group_by_trimester=group_by_trimester)
                 loading_ring.visible = False
                 page.snack_bar = ft.SnackBar(
                     content=ft.Row([
                         ft.Icon(ft.Icons.CHECK_CIRCLE, color=ft.Colors.WHITE),
-                        ft.Text(f"Reporte Excel generado: {os.path.basename(path)}", color=ft.Colors.WHITE),
+                        ft.Text(f"Reporte Excel {label}: {os.path.basename(path)}", color=ft.Colors.WHITE),
                     ]),
                     bgcolor=ft.Colors.GREEN_700,
                     duration=5000,
@@ -237,18 +237,18 @@ def admin_estudiantes_view(page: ft.Page):
             page.update()
         threading.Thread(target=_run, daemon=True).start()
 
-    def handle_generate_report(e):
+    def handle_generate_report(e, group_by_trimester=True):
         loading_ring.visible = True
         page.update()
+        label = "Trimestral" if group_by_trimester else "General"
         def _run():
             try:
-                # Generar el reporte SOLO con los datos filtrados
-                path = generate_estudiantes_report(state["filtered_data"])
+                path = generate_estudiantes_report(state["filtered_data"], group_by_trimester=group_by_trimester)
                 loading_ring.visible = False
                 page.snack_bar = ft.SnackBar(
                     content=ft.Row([
                         ft.Icon(ft.Icons.CHECK_CIRCLE, color=ft.Colors.WHITE),
-                        ft.Text(f"Reporte generado: {os.path.basename(path)}", color=ft.Colors.WHITE),
+                        ft.Text(f"Reporte {label}: {os.path.basename(path)}", color=ft.Colors.WHITE),
                     ]),
                     bgcolor=ft.Colors.GREEN_700,
                     duration=5000,
@@ -286,14 +286,20 @@ def admin_estudiantes_view(page: ft.Page):
 
     # Botones principales
     sync_btn = ft.ElevatedButton("Refrescar Censo", icon=ft.Icons.SYNC, color=ft.Colors.WHITE, bgcolor=INCES_BLUE, on_click=handle_sync)
-    report_btn = ft.ElevatedButton("PDF", icon=ft.Icons.PICTURE_AS_PDF, color=ft.Colors.WHITE, bgcolor=INCES_TEAL, on_click=handle_generate_report, style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)))
-    report_xlsx_btn = ft.ElevatedButton("Excel", icon=ft.Icons.GRID_ON, color=ft.Colors.WHITE, bgcolor=ft.Colors.GREEN_700, on_click=handle_generate_xlsx_report, style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)))
+
+    report_btn = ft.ElevatedButton("PDF Trim.", icon=ft.Icons.PICTURE_AS_PDF, color=ft.Colors.WHITE, bgcolor=INCES_TEAL, on_click=lambda e: handle_generate_report(e, True), style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), tooltip="PDF agrupado por trimestre")
+    report_xlsx_btn = ft.ElevatedButton("Excel Trim.", icon=ft.Icons.GRID_ON, color=ft.Colors.WHITE, bgcolor=ft.Colors.GREEN_700, on_click=lambda e: handle_generate_xlsx_report(e, True), style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), tooltip="Excel agrupado por trimestre")
+
+    report_general_btn = ft.ElevatedButton("PDF General", icon=ft.Icons.PICTURE_AS_PDF, color=ft.Colors.WHITE, bgcolor=INCES_TEAL, on_click=lambda e: handle_generate_report(e, False), style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), tooltip="PDF general (todos los datos del formulario)")
+    report_xlsx_general_btn = ft.ElevatedButton("Excel General", icon=ft.Icons.GRID_ON, color=ft.Colors.WHITE, bgcolor=ft.Colors.GREEN_700, on_click=lambda e: handle_generate_xlsx_report(e, False), style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), tooltip="Excel general (todos los datos del formulario)")
 
     header = ft.Row(
         controls=[
             ft.Text("Estudiantes Censados", size=24, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87),
             ft.Row([
-                last_sync_text, loading_ring, sync_btn, report_btn, report_xlsx_btn
+                last_sync_text, loading_ring, sync_btn,
+                report_btn, report_xlsx_btn,
+                report_general_btn, report_xlsx_general_btn
             ], alignment=ft.MainAxisAlignment.END, spacing=8)
         ],
         alignment=ft.MainAxisAlignment.SPACE_BETWEEN

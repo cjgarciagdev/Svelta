@@ -3,6 +3,7 @@ import os
 import json
 import urllib.request
 from urllib.error import URLError
+import re
 
 DB_NAME = "inces.sqlite"
 
@@ -273,6 +274,37 @@ def insert_or_update_estudiante(datos):
     finally:
         conn.close()
 
+def limpiar_telefono_internacional(telefono_str):
+    if not telefono_str: return None
+    t = str(telefono_str).strip()
+    has_plus = t.startswith('+')
+    
+    # Eliminar todos los no numéricos
+    t = re.sub(r'\D', '', t)
+    if not t: return None
+    
+    # Muchas personas escriben el código de país seguido del cero local (ej: +580424 o +570414)
+    # Si detectamos de 1 a 3 dígitos, seguido de un 0, y luego 10 dígitos, removemos el 0
+    t = re.sub(r'^(\d{1,3})0(\d{10})$', r'\1\2', t)
+    
+    # Lógica para números locales de Venezuela
+    if len(t) == 11 and t.startswith('0'):
+        return f"+58-{t[1:]}" # Quitar 0, poner +58-
+    if len(t) == 12 and t.startswith('58'):
+        return f"+58-{t[2:]}" # Separar el código 58 del resto
+    if len(t) == 10:
+        return f"+58-{t}"     # Número local sin 0 ni código
+        
+    # Si es de otro país (con o sin el + original)
+    # Asumimos que los últimos 10 dígitos son el número local (estándar en casi toda América)
+    # y lo que sobre al inicio es el código de país.
+    if has_plus and len(t) > 10:
+        return f"+{t[:-10]}-{t[-10:]}"
+    if 10 < len(t) <= 15 and not t.startswith('0'):
+        return f"+{t[:-10]}-{t[-10:]}"
+        
+    return None
+
 def sync_google_forms(url, token):
     """Obtiene datos del Google Script y los sincroniza en la BD."""
     full_url = f"{url}?token={token}"
@@ -304,7 +336,7 @@ def sync_google_forms(url, token):
                         elif "nivel acad" in k_lower: mapped['nivel_academico'] = value
                         elif "posee alguna discap" in k_lower: mapped['posee_discapacidad'] = value
                         elif "indique cu" in k_lower: mapped['cual_discapacidad'] = value
-                        elif "teléfono" in k_lower or "telefono" in k_lower: mapped['telefono'] = value
+                        elif "teléfono" in k_lower or "telefono" in k_lower: mapped['telefono'] = limpiar_telefono_internacional(value)
                         elif "correo" in k_lower: mapped['correo'] = value
                         elif "dirección" in k_lower or "direccion" in k_lower: mapped['direccion'] = value
                         elif "p.p.l" in k_lower or "perfil" in k_lower or "opcion de" in k_lower: mapped['perfil_nombre'] = value

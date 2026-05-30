@@ -24,7 +24,7 @@ def main(page: ft.Page):
     page.spacing = 0
 
     def on_login_success(user):
-        """Se ejecuta cuando el login es correcto."""
+        
         page.clean()
         if user["role"] == "ADMIN":
             page.add(admin_dashboard_view(page, user, on_logout=show_login))
