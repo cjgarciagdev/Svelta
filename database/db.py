@@ -67,11 +67,36 @@ def init_db():
         CREATE TABLE IF NOT EXISTS formador_perfil (
             formador_id INTEGER,
             perfil_id INTEGER,
+            entidad TEXT DEFAULT '',
             FOREIGN KEY(formador_id) REFERENCES users(id) ON DELETE CASCADE,
             FOREIGN KEY(perfil_id) REFERENCES perfiles(id) ON DELETE CASCADE,
-            PRIMARY KEY (formador_id, perfil_id)
+            PRIMARY KEY (formador_id, perfil_id, entidad)
         )
     """)
+    
+    # Migración de formador_perfil para añadir entidad a la PK
+    try:
+        # Check si la columna entidad ya existe
+        cursor.execute("SELECT entidad FROM formador_perfil LIMIT 1")
+    except Exception:
+        try:
+            # Recrear tabla para actualizar PRIMARY KEY
+            cursor.execute("ALTER TABLE formador_perfil RENAME TO old_formador_perfil")
+            cursor.execute("""
+                CREATE TABLE formador_perfil (
+                    formador_id INTEGER,
+                    perfil_id INTEGER,
+                    entidad TEXT DEFAULT '',
+                    FOREIGN KEY(formador_id) REFERENCES users(id) ON DELETE CASCADE,
+                    FOREIGN KEY(perfil_id) REFERENCES perfiles(id) ON DELETE CASCADE,
+                    PRIMARY KEY (formador_id, perfil_id, entidad)
+                )
+            """)
+            cursor.execute("INSERT INTO formador_perfil (formador_id, perfil_id) SELECT formador_id, perfil_id FROM old_formador_perfil")
+            cursor.execute("DROP TABLE old_formador_perfil")
+            conn.commit()
+        except Exception as e:
+            print(f"Error migrando formador_perfil: {e}")
 
     # 4. Tabla de Estudiantes (Datos exactos del Google Form)
     cursor.execute("""
@@ -92,14 +117,54 @@ def init_db():
             estado_inscripcion TEXT DEFAULT 'CENSADO', -- 'CENSADO', 'INSCRITO', 'CULMINADO', 'RETIRADO'
             fecha_censo DATETIME DEFAULT CURRENT_TIMESTAMP,
             tipo_origen TEXT DEFAULT 'GENERAL', -- 'GENERAL' o 'AMBITO'
+            entidad TEXT,
             FOREIGN KEY(perfil_id) REFERENCES perfiles(id) ON DELETE SET NULL,
-            UNIQUE (cedula, perfil_id)
+            UNIQUE (cedula, perfil_id, entidad)
         )
     """)
     
-    # Migración: agregar tipo_origen a bases de datos antiguas
+    # Migración de tabla estudiantes para actualizar UNIQUE constraint
+    try:
+        cursor.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='estudiantes'")
+        sql = cursor.fetchone()[0]
+        if "UNIQUE (cedula, perfil_id)" in sql and "entidad" not in sql.split("UNIQUE")[1]:
+            cursor.execute("ALTER TABLE estudiantes RENAME TO old_estudiantes")
+            cursor.execute("""
+                CREATE TABLE estudiantes (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    nombres TEXT NOT NULL,
+                    apellidos TEXT NOT NULL,
+                    cedula TEXT NOT NULL,
+                    genero TEXT,
+                    edad INTEGER,
+                    nivel_academico TEXT,
+                    posee_discapacidad BOOLEAN,
+                    cual_discapacidad TEXT,
+                    telefono TEXT,
+                    correo TEXT,
+                    direccion TEXT,
+                    perfil_id INTEGER,
+                    estado_inscripcion TEXT DEFAULT 'CENSADO',
+                    fecha_censo DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    tipo_origen TEXT DEFAULT 'GENERAL',
+                    entidad TEXT,
+                    FOREIGN KEY(perfil_id) REFERENCES perfiles(id) ON DELETE SET NULL,
+                    UNIQUE (cedula, perfil_id, entidad)
+                )
+            """)
+            cursor.execute("INSERT INTO estudiantes SELECT id, nombres, apellidos, cedula, genero, edad, nivel_academico, posee_discapacidad, cual_discapacidad, telefono, correo, direccion, perfil_id, estado_inscripcion, fecha_censo, tipo_origen, IFNULL(entidad, '') FROM old_estudiantes")
+            cursor.execute("DROP TABLE old_estudiantes")
+            conn.commit()
+    except Exception as e:
+        print(f"Error migrando tabla estudiantes: {e}")
+    
+    # Migración: agregar tipo_origen y entidad a bases de datos antiguas
     try:
         cursor.execute("ALTER TABLE estudiantes ADD COLUMN tipo_origen TEXT DEFAULT 'GENERAL'")
+    except Exception:
+        pass
+    try:
+        cursor.execute("ALTER TABLE estudiantes ADD COLUMN entidad TEXT")
     except Exception:
         pass
 
@@ -252,15 +317,16 @@ def insert_or_update_estudiante(datos):
             INSERT INTO estudiantes (
                 nombres, apellidos, cedula, genero, edad, nivel_academico,
                 posee_discapacidad, cual_discapacidad, telefono, correo, 
-                direccion, perfil_id, fecha_censo, tipo_origen
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(cedula, perfil_id) DO UPDATE SET
+                direccion, perfil_id, fecha_censo, tipo_origen, entidad
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(cedula, perfil_id, entidad) DO UPDATE SET
                 nombres=excluded.nombres,
                 apellidos=excluded.apellidos,
                 telefono=excluded.telefono,
                 correo=excluded.correo,
                 direccion=excluded.direccion,
-                tipo_origen=excluded.tipo_origen
+                tipo_origen=excluded.tipo_origen,
+                entidad=COALESCE(NULLIF(excluded.entidad, ''), estudiantes.entidad)
         """, (
             datos.get('nombres', ''),
             datos.get('apellidos', ''),
@@ -275,7 +341,8 @@ def insert_or_update_estudiante(datos):
             datos.get('direccion', ''),
             perfil_id,
             datos.get('fecha_censo', None),
-            datos.get('tipo_origen', 'GENERAL')
+            datos.get('tipo_origen', 'GENERAL'),
+            datos.get('entidad', '')
         ))
         conn.commit()
     except Exception as e:
@@ -319,6 +386,7 @@ def sync_google_forms(url, token, tipo_origen="GENERAL"):
                         elif "dirección" in k_lower or "direccion" in k_lower: mapped['direccion'] = value
                         elif "p.p.l" in k_lower or "perfil" in k_lower or "opcion de" in k_lower: mapped['perfil_nombre'] = value
                         elif "marca temporal" in k_lower: mapped['fecha_censo'] = value
+                        elif "seleccione el nombre" in k_lower or ("nombre" in k_lower and ("postula" in k_lower or "postulante" in k_lower)): mapped['entidad'] = value
                     
                     if 'cedula' in mapped and mapped['cedula']:
                         mapped['tipo_origen'] = tipo_origen
@@ -421,12 +489,25 @@ def get_stats():
 # FUNCIONES DEL FLUJO DEL FORMADOR
 # ==========================================
 
-def assign_perfil_to_formador(formador_id, perfil_id):
-    """Asigna un perfil/curso a un formador."""
+def get_entidades_disponibles():
+    """Devuelve todos los valores únicos de 'entidad' que tienen los estudiantes."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT DISTINCT entidad FROM estudiantes
+        WHERE entidad IS NOT NULL AND entidad != ''
+        ORDER BY entidad ASC
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+    return [row["entidad"] for row in rows]
+
+def assign_perfil_to_formador(formador_id, perfil_id, entidad=""):
+    """Asigna un perfil/curso a un formador, opcionalmente filtrado por entidad."""
     conn = get_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("INSERT INTO formador_perfil (formador_id, perfil_id) VALUES (?, ?)", (formador_id, perfil_id))
+        cursor.execute("INSERT INTO formador_perfil (formador_id, perfil_id, entidad) VALUES (?, ?, ?)", (formador_id, perfil_id, entidad))
         conn.commit()
         return True
     except sqlite3.IntegrityError:
@@ -434,11 +515,11 @@ def assign_perfil_to_formador(formador_id, perfil_id):
     finally:
         conn.close()
 
-def remove_perfil_from_formador(formador_id, perfil_id):
+def remove_perfil_from_formador(formador_id, perfil_id, entidad=""):
     """Quita un perfil/curso de un formador."""
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM formador_perfil WHERE formador_id = ? AND perfil_id = ?", (formador_id, perfil_id))
+    cursor.execute("DELETE FROM formador_perfil WHERE formador_id = ? AND perfil_id = ? AND entidad = ?", (formador_id, perfil_id, entidad))
     conn.commit()
     conn.close()
 
@@ -447,7 +528,7 @@ def get_perfiles_by_formador(formador_id):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT p.* FROM perfiles p
+        SELECT p.*, fp.entidad FROM perfiles p
         INNER JOIN formador_perfil fp ON p.id = fp.perfil_id
         WHERE fp.formador_id = ?
         ORDER BY p.name
@@ -461,10 +542,10 @@ def get_estudiantes_by_formador(formador_id):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT e.*, p.name as perfil_name FROM estudiantes e
+        SELECT e.*, p.name as perfil_name, fp.entidad as formador_entidad FROM estudiantes e
         INNER JOIN formador_perfil fp ON e.perfil_id = fp.perfil_id
         INNER JOIN perfiles p ON e.perfil_id = p.id
-        WHERE fp.formador_id = ?
+        WHERE fp.formador_id = ? AND IFNULL(e.entidad, '') = IFNULL(fp.entidad, '')
         ORDER BY p.name, e.apellidos
     """, (formador_id,))
     estudiantes = cursor.fetchall()
