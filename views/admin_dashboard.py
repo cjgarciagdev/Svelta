@@ -31,9 +31,9 @@ def admin_dashboard_view(page: ft.Page, user, on_logout):
         elif view_name == "cursos":
             content_area.content.controls.append(admin_cursos_view(page))
         elif view_name == "estudiantes":
-            content_area.content = admin_estudiantes_view(page)
+            content_area.content = admin_estudiantes_view(page, user)
         elif view_name == "ambito":
-            content_area.content = admin_estudiantes_ambito_view(page)
+            content_area.content = admin_estudiantes_ambito_view(page, user)
             
         content_area.update()
 

@@ -10,7 +10,7 @@ import math
 GOOGLE_SCRIPT_URL_AMBITO = "https://script.google.com/macros/s/AKfycbweM1zIrHOPvhSFNggExghoUHzRo9cUfkBr5CBO4cwl0i4PKWu6pxIwXABOnovEda4_/exec"
 SCRIPT_TOKEN_AMBITO = "inces_admin_2026"
 
-def admin_estudiantes_ambito_view(page: ft.Page):
+def admin_estudiantes_ambito_view(page: ft.Page, user=None):
     state = {
         "current_page": 1,
         "items_per_page": 8,
@@ -300,11 +300,15 @@ def admin_estudiantes_ambito_view(page: ft.Page):
     report_btn = ft.ElevatedButton("PDF", icon=ft.Icons.PICTURE_AS_PDF, color=ft.Colors.WHITE, bgcolor=INCES_TEAL, on_click=handle_generate_report, style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)))
     report_xlsx_btn = ft.ElevatedButton("Excel", icon=ft.Icons.GRID_ON, color=ft.Colors.WHITE, bgcolor=ft.Colors.GREEN_700, on_click=handle_generate_xlsx_report, style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)))
 
+    is_super_admin = user and dict(user).get("was_formador", 0) == 0
+
     header = ft.Row(
         controls=[
-            ft.Text("Censo de Otros Ámbitos", size=24, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87),
+            ft.Text("Censo Otros Ámbitos", size=24, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87),
             ft.Row([
-                last_sync_text, loading_ring, sync_btn, report_btn, report_xlsx_btn
+                last_sync_text, loading_ring, sync_btn, 
+                report_btn if is_super_admin else ft.Container(), 
+                report_xlsx_btn if is_super_admin else ft.Container()
             ], alignment=ft.MainAxisAlignment.END, spacing=8)
         ],
         alignment=ft.MainAxisAlignment.SPACE_BETWEEN

@@ -51,24 +51,25 @@ def admin_users_view(page: ft.Page, current_user):
             acciones_lista = []
             
             if user["role"] == "FORMADOR":
-                acciones_lista.extend([
-                    ft.IconButton(
-                        icon=ft.Icons.CHECK_CIRCLE, 
-                        icon_color=ft.Colors.GREEN_500, 
-                        tooltip="Aprobar",
-                        data={"id": user["id"], "status": "APPROVED"},
-                        on_click=handle_status_change
-                    ),
-                    ft.IconButton(
-                        icon=ft.Icons.CANCEL, 
-                        icon_color=ft.Colors.RED_500, 
-                        tooltip="Rechazar",
-                        data={"id": user["id"], "status": "REJECTED"},
-                        on_click=handle_status_change
-                    ),
-                ])
-                # Solo el admin principal puede ascender
-                if current_user["id"] == 1:
+                if dict(current_user).get("was_formador", 0) == 0:
+                    acciones_lista.extend([
+                        ft.IconButton(
+                            icon=ft.Icons.CHECK_CIRCLE, 
+                            icon_color=ft.Colors.GREEN_500, 
+                            tooltip="Aprobar",
+                            data={"id": user["id"], "status": "APPROVED"},
+                            on_click=handle_status_change
+                        ),
+                        ft.IconButton(
+                            icon=ft.Icons.CANCEL, 
+                            icon_color=ft.Colors.RED_500, 
+                            tooltip="Rechazar",
+                            data={"id": user["id"], "status": "REJECTED"},
+                            on_click=handle_status_change
+                        ),
+                    ])
+                # Solo el admin principal puede hacer a alguien admin directo desde PENDING
+                if dict(current_user).get("was_formador", 0) == 0:
                     acciones_lista.append(
                         ft.IconButton(
                             icon=ft.Icons.ADMIN_PANEL_SETTINGS, 
@@ -78,18 +79,29 @@ def admin_users_view(page: ft.Page, current_user):
                             on_click=handle_role_change
                         )
                     )
-                acciones_lista.append(
-                    ft.IconButton(
-                        icon=ft.Icons.MENU_BOOK,
-                        icon_color=ft.Colors.BLUE_400,
-                        tooltip="Asignar Perfiles",
-                        data={"id": user["id"]},
-                        on_click=lambda e: open_assign_dialog(e.control.data["id"])
+            elif user["role"] == "FORMADOR":
+                if dict(current_user).get("was_formador", 0) == 0:
+                    acciones_lista.append(
+                        ft.IconButton(
+                            icon=ft.Icons.ADMIN_PANEL_SETTINGS, 
+                            icon_color=ft.Colors.GREEN_400, 
+                            tooltip="Ascender a Administrador",
+                            data={"id": user["id"], "role": "ADMIN"},
+                            on_click=handle_role_change
+                        )
                     )
-                )
+                    acciones_lista.append(
+                        ft.IconButton(
+                            icon=ft.Icons.MENU_BOOK,
+                            icon_color=ft.Colors.BLUE_400,
+                            tooltip="Asignar Perfiles",
+                            data={"id": user["id"]},
+                            on_click=lambda e: open_assign_dialog(e.control.data["id"])
+                        )
+                    )
             elif user["role"] == "ADMIN":
                 # Solo el admin principal puede degradar (y no puede degradarse a sí mismo)
-                if user["id"] != 1 and current_user["id"] == 1:
+                if user["id"] != 1 and dict(current_user).get("was_formador", 0) == 0:
                     acciones_lista.append(
                         ft.IconButton(
                             icon=ft.Icons.REMOVE_MODERATOR, 
@@ -101,7 +113,7 @@ def admin_users_view(page: ft.Page, current_user):
                     )
             
             # Botón de eliminar (disponible para todos menos el admin principal)
-            if user["id"] != 1:
+            if user["id"] != 1 and dict(current_user).get("was_formador", 0) == 0:
                 acciones_lista.append(
                     ft.IconButton(
                         icon=ft.Icons.DELETE_FOREVER_OUTLINED, 
