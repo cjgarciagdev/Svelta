@@ -259,7 +259,7 @@ def admin_users_view(page: ft.Page, current_user):
                     ft.Text("Permisos Actuales:", weight=ft.FontWeight.BOLD),
                     ft.Container(
                         content=lista_asignados,
-                        border=ft.border.all(1, ft.Colors.GREY_200),
+                        border=ft.border.Border.all(1, ft.Colors.GREY_200),
                         border_radius=8,
                         padding=10
                     )

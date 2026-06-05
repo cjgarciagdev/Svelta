@@ -112,7 +112,7 @@ def formador_dashboard_view(page: ft.Page, user, on_logout):
                 ft.DataColumn(ft.Text("Acción", weight=ft.FontWeight.BOLD)),
             ],
             rows=[],
-            border=ft.border.all(1, ft.Colors.GREY_200),
+            border=ft.border.Border.all(1, ft.Colors.GREY_200),
             border_radius=10,
             expand=True
         )
@@ -220,7 +220,7 @@ def formador_dashboard_view(page: ft.Page, user, on_logout):
     # Sidebar del formador
     sidebar = ft.Container(
         width=250, bgcolor=SIDEBAR_BG, padding=20,
-        border=ft.border.only(right=ft.border.BorderSide(1, ft.Colors.GREY_300)),
+        border=ft.border.Border.only(right=ft.border.BorderSide(1, ft.Colors.GREY_300)),
         content=ft.Column(expand=True, controls=[
             ft.Row([
                 ft.Container(

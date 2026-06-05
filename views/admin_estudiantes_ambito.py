@@ -80,7 +80,7 @@ def admin_estudiantes_ambito_view(page: ft.Page):
             ft.DataColumn(ft.Text("Estado", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
         ],
         rows=[],
-        border=ft.border.all(1, ft.Colors.PURPLE_200),
+        border=ft.border.Border.all(1, ft.Colors.PURPLE_200),
         border_radius=10,
         heading_row_color=ft.Colors.PURPLE_50,
         expand=True
