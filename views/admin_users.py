@@ -1,5 +1,5 @@
 import flet as ft
-from database.db import get_all_users, update_user_status, update_user_role, delete_user, get_all_perfiles, assign_perfil_to_formador, remove_perfil_from_formador, get_perfiles_by_formador
+from database.db import get_all_users, update_user_status, update_user_role, delete_user, get_all_perfiles, assign_perfil_to_formador, remove_perfil_from_formador, get_perfiles_by_formador, get_entidades_disponibles
 from config.theme import INCES_TEAL, INCES_BLUE
 
 def admin_users_view(page: ft.Page, current_user):
@@ -170,47 +170,108 @@ def admin_users_view(page: ft.Page, current_user):
         page.update()
 
     def open_assign_dialog(user_id):
-        """Muestra un diálogo para asignar/quitar perfiles a un formador."""
-        perfiles = get_all_perfiles()
-        asignados = [p["id"] for p in get_perfiles_by_formador(user_id)]
+        """Muestra un diálogo para asignar/quitar perfiles a un formador con Entidad opcional."""
         
-        checks = []
-        for perfil in perfiles:
-            if not perfil["is_active"]:
-                continue
-            cb = ft.Checkbox(
-                label=perfil["name"],
-                value=(perfil["id"] in asignados),
-                data={"user_id": user_id, "perfil_id": perfil["id"]}
-            )
-            checks.append(cb)
+        perfiles_dropdown = ft.Dropdown(
+            label="Curso / Perfil",
+            options=[ft.dropdown.Option(str(p["id"]), p["name"]) for p in get_all_perfiles() if p["is_active"]],
+            width=250,
+            text_size=13
+        )
+
+        # Cargar entidades únicas desde la BD
+        entidades_disponibles = get_entidades_disponibles()
+        entidad_options = [ft.dropdown.Option("", "CFS")] + [
+            ft.dropdown.Option(e, e) for e in entidades_disponibles
+        ]
+        entidad_dropdown = ft.Dropdown(
+            label="Ámbito",
+            hint_text="CFS",
+            options=entidad_options,
+            value="",
+            width=220,
+            text_size=13
+        )
         
-        def save_assignments(e):
-            for cb in checks:
-                perfil_id = cb.data["perfil_id"]
-                if cb.value:
-                    assign_perfil_to_formador(user_id, perfil_id)
-                else:
-                    remove_perfil_from_formador(user_id, perfil_id)
-            dlg.open = False
+        lista_asignados = ft.Column(scroll=ft.ScrollMode.AUTO, height=200)
+
+        def render_asignados():
+            lista_asignados.controls.clear()
+            asignados = get_perfiles_by_formador(user_id)
+            if not asignados:
+                lista_asignados.controls.append(ft.Text("No tiene cursos asignados.", color=ft.Colors.GREY_500))
+            else:
+                for p in asignados:
+                    p_dict = dict(p)
+                    ent_val = p_dict.get("entidad", "")
+                    entidad_str = f" [{ent_val}]" if ent_val else " [CFS]"
+                    lista_asignados.controls.append(
+                        ft.Row([
+                            ft.Icon(ft.Icons.SCHOOL, size=16, color=INCES_TEAL),
+                            ft.Text(f"{p['name']}{entidad_str}", size=13, weight=ft.FontWeight.W_500, expand=True),
+                            ft.IconButton(
+                                icon=ft.Icons.DELETE_OUTLINE,
+                                icon_color=ft.Colors.RED_400,
+                                tooltip="Quitar",
+                                data={"perfil_id": p["id"], "entidad": ent_val},
+                                on_click=lambda e: remove_and_refresh(e.control.data)
+                            )
+                        ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
+                    )
+            # No llamamos a page.update() aquí, lo dejamos a las funciones que llaman a render_asignados()
+
+        def remove_and_refresh(data):
+            remove_perfil_from_formador(user_id, data["perfil_id"], data["entidad"])
+            render_asignados()
             page.update()
-            load_users()
+
+        def add_assignment(e):
+            if not perfiles_dropdown.value:
+                return
+            perfil_id = int(perfiles_dropdown.value)
+            entidad = (entidad_dropdown.value or "").strip()
+            
+            success = assign_perfil_to_formador(user_id, perfil_id, entidad)
+            if success:
+                entidad_dropdown.value = ""
+                render_asignados()
+                page.update()
+            else:
+                page.snack_bar = ft.SnackBar(ft.Text("Esa combinación ya está asignada"), bgcolor=ft.Colors.RED_700)
+                page.snack_bar.open = True
+                page.update()
 
         def close_dlg(e):
             dlg.open = False
             page.update()
         
+        add_btn = ft.ElevatedButton("Agregar", icon=ft.Icons.ADD, bgcolor=INCES_TEAL, color=ft.Colors.WHITE, on_click=add_assignment)
+
         dlg = ft.AlertDialog(
             modal=True,
-            title=ft.Text("Asignar Perfiles"),
-            content=ft.Column(checks, tight=True, scroll=ft.ScrollMode.AUTO, height=300),
+            title=ft.Text("Asignar Permisos al Formador"),
+            content=ft.Container(
+                width=600,
+                content=ft.Column([
+                    ft.Text("Agrega un curso y opcionalmente especifica una entidad para limitar su acceso.", size=12, color=ft.Colors.GREY_600),
+                    ft.Row([perfiles_dropdown, entidad_dropdown, add_btn], alignment=ft.MainAxisAlignment.START),
+                    ft.Divider(height=20, color=ft.Colors.GREY_300),
+                    ft.Text("Permisos Actuales:", weight=ft.FontWeight.BOLD),
+                    ft.Container(
+                        content=lista_asignados,
+                        border=ft.border.all(1, ft.Colors.GREY_200),
+                        border_radius=8,
+                        padding=10
+                    )
+                ], tight=True)
+            ),
             actions=[
-                ft.TextButton("Cancelar", on_click=close_dlg),
-                ft.ElevatedButton("Guardar", bgcolor=INCES_TEAL, color=ft.Colors.WHITE, on_click=save_assignments),
+                ft.TextButton("Cerrar", on_click=close_dlg),
             ],
         )
         page.overlay.append(dlg)
         dlg.open = True
+        render_asignados()
         page.update()
 
     
