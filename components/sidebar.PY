@@ -23,7 +23,7 @@ def create_sidebar(user, on_nav_change, on_logout, on_switch_view=None):
         width=250,
         bgcolor=SIDEBAR_BG,
         padding=20,
-        border=ft.border.only(right=ft.border.BorderSide(1, ft.Colors.GREY_300)),
+        border=ft.border.Border.only(right=ft.border.BorderSide(1, ft.Colors.GREY_300)),
         content=ft.Column(
             expand=True,
             controls=[

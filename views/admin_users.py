@@ -133,7 +133,7 @@ def admin_users_view(page: ft.Page, current_user):
                                 color=INCES_TEAL if user["role"] == "ADMIN" else ft.Colors.BLACK87
                             ),
                             bgcolor=ft.Colors.TEAL_50 if user["role"] == "ADMIN" else ft.Colors.TRANSPARENT,
-                            padding=ft.padding.symmetric(horizontal=8, vertical=4),
+                            padding=ft.padding.Padding(left=8, top=4, right=8, bottom=4),
                             border_radius=10
                         )),
                         ft.DataCell(estado_chip),

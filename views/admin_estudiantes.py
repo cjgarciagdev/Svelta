@@ -70,17 +70,14 @@ def admin_estudiantes_view(page: ft.Page):
     # Tabla
     estudiantes_table = ft.DataTable(
         columns=[
-            ft.DataColumn(ft.Text("#", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
             ft.DataColumn(ft.Text("Cédula", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
             ft.DataColumn(ft.Text("Nombres y Apellidos", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
-            ft.DataColumn(ft.Text("Género", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
-            ft.DataColumn(ft.Text("Correo", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
             ft.DataColumn(ft.Text("Curso / Perfil", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
             ft.DataColumn(ft.Text("Teléfono", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
             ft.DataColumn(ft.Text("Estado", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
         ],
         rows=[],
-        border=ft.border.all(1, INCES_TEAL),
+        border=ft.border.Border.all(1, INCES_TEAL),
         border_radius=10,
         heading_row_color=ft.Colors.with_opacity(0.1, INCES_TEAL),
         expand=True
@@ -170,10 +167,7 @@ def admin_estudiantes_view(page: ft.Page):
         if not page_data:
             estudiantes_table.rows.append(
                 ft.DataRow(cells=[
-                    ft.DataCell(ft.Text("-")),
                     ft.DataCell(ft.Text("Sin registros", color=ft.Colors.GREY_600)),
-                    ft.DataCell(ft.Text("-")),
-                    ft.DataCell(ft.Text("-")),
                     ft.DataCell(ft.Text("-")),
                     ft.DataCell(ft.Text("-")),
                     ft.DataCell(ft.Text("-")),
@@ -181,8 +175,7 @@ def admin_estudiantes_view(page: ft.Page):
                 ])
             )
         else:
-            for idx, est in enumerate(page_data):
-                num = (state["current_page"] - 1) * state["items_per_page"] + idx + 1
+            for est in page_data:
                 estado_val = est["estado_inscripcion"] or "CENSADO"
                 estado_color = INCES_TEAL if estado_val == 'INSCRITO' else ft.Colors.AMBER_700
                 if estado_val in ['RECHAZADO', 'RETIRADO']:
@@ -194,11 +187,8 @@ def admin_estudiantes_view(page: ft.Page):
                 
                 estudiantes_table.rows.append(
                     ft.DataRow(cells=[
-                        ft.DataCell(ft.Text(str(num), weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_600)),
                         ft.DataCell(ft.Text(str(est.get('cedula', '')))),
                         ft.DataCell(ft.Text(f"{est.get('nombres', '')} {est.get('apellidos', '')}")),
-                        ft.DataCell(ft.Text(est.get('genero', '') or "N/A")),
-                        ft.DataCell(ft.Text(est.get('correo', '') or "N/A")),
                         ft.DataCell(ft.Text(curso_nombre)),
                         ft.DataCell(ft.Text(est.get('telefono', '') or "N/A")),
                         ft.DataCell(ft.Text(estado_val, color=estado_color, weight=ft.FontWeight.BOLD)),
@@ -215,21 +205,22 @@ def admin_estudiantes_view(page: ft.Page):
     def fetch_data():
         """Carga los datos de la base de datos a la tabla visual."""
         raw_data = get_all_estudiantes()
-        # Solo cargar los que son de GENERAL
-        state["all_data"] = [dict(r) for r in raw_data if dict(r).get('tipo_origen', 'GENERAL') == 'GENERAL']
+        # Convertir a dict
+        state["all_data"] = [dict(r) if not isinstance(r, dict) else r for r in raw_data]
         handle_filter_change()
 
-    def handle_generate_xlsx_report(e):
+    def handle_generate_xlsx_report(e, group_by_trimester=True):
         loading_ring.visible = True
         page.update()
+        label = "Trimestral" if group_by_trimester else "General"
         def _run():
             try:
-                path = generate_estudiantes_xlsx_report(state["filtered_data"])
+                path = generate_estudiantes_xlsx_report(state["filtered_data"], group_by_trimester=group_by_trimester)
                 loading_ring.visible = False
                 page.snack_bar = ft.SnackBar(
                     content=ft.Row([
                         ft.Icon(ft.Icons.CHECK_CIRCLE, color=ft.Colors.WHITE),
-                        ft.Text(f"Reporte Excel generado: {os.path.basename(path)}", color=ft.Colors.WHITE),
+                        ft.Text(f"Reporte Excel {label}: {os.path.basename(path)}", color=ft.Colors.WHITE),
                     ]),
                     bgcolor=ft.Colors.GREEN_700,
                     duration=5000,
@@ -246,17 +237,18 @@ def admin_estudiantes_view(page: ft.Page):
             page.update()
         threading.Thread(target=_run, daemon=True).start()
 
-    def handle_generate_report(e):
+    def handle_generate_report(e, group_by_trimester=True):
         loading_ring.visible = True
         page.update()
+        label = "Trimestral" if group_by_trimester else "General"
         def _run():
             try:
-                path = generate_estudiantes_report(state["filtered_data"])
+                path = generate_estudiantes_report(state["filtered_data"], group_by_trimester=group_by_trimester)
                 loading_ring.visible = False
                 page.snack_bar = ft.SnackBar(
                     content=ft.Row([
                         ft.Icon(ft.Icons.CHECK_CIRCLE, color=ft.Colors.WHITE),
-                        ft.Text(f"Reporte generado: {os.path.basename(path)}", color=ft.Colors.WHITE),
+                        ft.Text(f"Reporte {label}: {os.path.basename(path)}", color=ft.Colors.WHITE),
                     ]),
                     bgcolor=ft.Colors.GREEN_700,
                     duration=5000,
@@ -274,37 +266,40 @@ def admin_estudiantes_view(page: ft.Page):
         threading.Thread(target=_run, daemon=True).start()
 
     def handle_sync(e=None):
-        def _do_sync():
-            loading_ring.visible = True
-            page.update()
-
-            success = sync_google_forms(GOOGLE_SCRIPT_URL, SCRIPT_TOKEN, tipo_origen="GENERAL")
-
-            loading_ring.visible = False
-            if success:
-                last_sync_text.value = f"Última actualización: {time.strftime('%I:%M %p')}"
-                fetch_data()
-                if e is not None:
-                    page.snack_bar = ft.SnackBar(ft.Text("Datos del Censo CFS sincronizados"), bgcolor=ft.Colors.GREEN_700)
-                    page.snack_bar.open = True
-            else:
-                page.snack_bar = ft.SnackBar(ft.Text("Error al sincronizar. Revisa tu conexión."), bgcolor=ft.Colors.RED_700)
+        loading_ring.visible = True
+        page.update()
+        
+        success = sync_google_forms(GOOGLE_SCRIPT_URL, SCRIPT_TOKEN)
+        
+        loading_ring.visible = False
+        if success:
+            last_sync_text.value = f"Última actualización: {time.strftime('%I:%M %p')}"
+            fetch_data()
+            if e is not None:
+                page.snack_bar = ft.SnackBar(ft.Text("Datos sincronizados correctamente con Google Forms"), bgcolor=ft.Colors.GREEN_700)
                 page.snack_bar.open = True
-
-            page.update()
-
-        threading.Thread(target=_do_sync, daemon=True).start()
+        else:
+            page.snack_bar = ft.SnackBar(ft.Text("Error al sincronizar. Revisa tu conexión."), bgcolor=ft.Colors.RED_700)
+            page.snack_bar.open = True
+            
+        page.update()
 
     # Botones principales
-    sync_btn = ft.ElevatedButton("Refrescar General", icon=ft.Icons.SYNC, color=ft.Colors.WHITE, bgcolor=INCES_BLUE, on_click=handle_sync)
-    report_btn = ft.ElevatedButton("PDF", icon=ft.Icons.PICTURE_AS_PDF, color=ft.Colors.WHITE, bgcolor=INCES_TEAL, on_click=handle_generate_report, style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)))
-    report_xlsx_btn = ft.ElevatedButton("Excel", icon=ft.Icons.GRID_ON, color=ft.Colors.WHITE, bgcolor=ft.Colors.GREEN_700, on_click=handle_generate_xlsx_report, style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)))
+    sync_btn = ft.ElevatedButton("Refrescar Censo", icon=ft.Icons.SYNC, color=ft.Colors.WHITE, bgcolor=INCES_BLUE, on_click=handle_sync)
+
+    report_btn = ft.ElevatedButton("PDF Trim.", icon=ft.Icons.PICTURE_AS_PDF, color=ft.Colors.WHITE, bgcolor=INCES_TEAL, on_click=lambda e: handle_generate_report(e, True), style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), tooltip="PDF agrupado por trimestre")
+    report_xlsx_btn = ft.ElevatedButton("Excel Trim.", icon=ft.Icons.GRID_ON, color=ft.Colors.WHITE, bgcolor=ft.Colors.GREEN_700, on_click=lambda e: handle_generate_xlsx_report(e, True), style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), tooltip="Excel agrupado por trimestre")
+
+    report_general_btn = ft.ElevatedButton("PDF General", icon=ft.Icons.PICTURE_AS_PDF, color=ft.Colors.WHITE, bgcolor=INCES_TEAL, on_click=lambda e: handle_generate_report(e, False), style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), tooltip="PDF general (todos los datos del formulario)")
+    report_xlsx_general_btn = ft.ElevatedButton("Excel General", icon=ft.Icons.GRID_ON, color=ft.Colors.WHITE, bgcolor=ft.Colors.GREEN_700, on_click=lambda e: handle_generate_xlsx_report(e, False), style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), tooltip="Excel general (todos los datos del formulario)")
 
     header = ft.Row(
         controls=[
-            ft.Text("Censo CFS", size=24, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87),
+            ft.Text("Estudiantes Censados", size=24, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87),
             ft.Row([
-                last_sync_text, loading_ring, sync_btn, report_btn, report_xlsx_btn
+                last_sync_text, loading_ring, sync_btn,
+                report_btn, report_xlsx_btn,
+                report_general_btn, report_xlsx_general_btn
             ], alignment=ft.MainAxisAlignment.END, spacing=8)
         ],
         alignment=ft.MainAxisAlignment.SPACE_BETWEEN
