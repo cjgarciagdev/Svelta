@@ -50,7 +50,7 @@ def admin_estudiantes_ambito_view(page: ft.Page, user=None):
         on_select=lambda e: handle_filter_change()
     )
 
-    curso_dropdown = ft.Dropdown(
+    perfil_dropdown = ft.Dropdown(
         options=[ft.dropdown.Option("TODOS")],
         value="TODOS",
         width=180,
@@ -62,10 +62,10 @@ def admin_estudiantes_ambito_view(page: ft.Page, user=None):
         on_select=lambda e: handle_filter_change()
     )
 
-    # Cargar cursos en el dropdown
+    # Cargar perfiles en el dropdown
     perfiles = get_all_perfiles()
     for p in perfiles:
-        curso_dropdown.options.append(ft.dropdown.Option(p["name"]))
+        perfil_dropdown.options.append(ft.dropdown.Option(p["name"]))
 
     # Tabla
     estudiantes_table = ft.DataTable(
@@ -76,7 +76,7 @@ def admin_estudiantes_ambito_view(page: ft.Page, user=None):
             ft.DataColumn(ft.Text("Género", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
             ft.DataColumn(ft.Text("Correo", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
             ft.DataColumn(ft.Text("Nombre de Entidad", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
-            ft.DataColumn(ft.Text("Curso / Perfil", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
+            ft.DataColumn(ft.Text("Perfil", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
             ft.DataColumn(ft.Text("Teléfono", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
             ft.DataColumn(ft.Text("Estado", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
         ],
@@ -124,19 +124,19 @@ def admin_estudiantes_ambito_view(page: ft.Page, user=None):
         
         query = (search_field.value or "").lower().strip()
         f_estado = estado_dropdown.value
-        f_curso = curso_dropdown.value
+        f_perfil = perfil_dropdown.value
 
         filtered = []
         for est in state["all_data"]:
             estado = est["estado_inscripcion"] or "CENSADO"
-            curso = est["perfil_nombre"] or "Sin asignar"
+            perfil = est["perfil_nombre"] or "Sin asignar"
             
             # Filtro Estado
             if f_estado != "TODOS" and estado != f_estado:
                 continue
             
-            # Filtro Curso
-            if f_curso != "TODOS" and curso != f_curso:
+            # Filtro Perfil
+            if f_perfil != "TODOS" and perfil != f_perfil:
                 continue
             
             # Filtro Búsqueda
@@ -192,7 +192,7 @@ def admin_estudiantes_ambito_view(page: ft.Page, user=None):
                 elif estado_val == 'CULMINADO':
                     estado_color = ft.Colors.BLUE_700
                 
-                curso_nombre = est['perfil_nombre'] if est['perfil_nombre'] else "Sin asignar"
+                perfil_nombre = est['perfil_nombre'] if est['perfil_nombre'] else "Sin asignar"
                 
                 estudiantes_table.rows.append(
                     ft.DataRow(cells=[
@@ -202,7 +202,7 @@ def admin_estudiantes_ambito_view(page: ft.Page, user=None):
                         ft.DataCell(ft.Text(est.get('genero', '') or "N/A")),
                         ft.DataCell(ft.Text(est.get('correo', '') or "N/A")),
                         ft.DataCell(ft.Text(est.get('entidad', '') or "N/A")),
-                        ft.DataCell(ft.Text(curso_nombre)),
+                        ft.DataCell(ft.Text(perfil_nombre)),
                         ft.DataCell(ft.Text(est.get('telefono', '') or "N/A")),
                         ft.DataCell(ft.Text(estado_val, color=estado_color, weight=ft.FontWeight.BOLD)),
                     ])
@@ -322,8 +322,8 @@ def admin_estudiantes_ambito_view(page: ft.Page, user=None):
             search_field,
             ft.Text("Estado:", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700),
             estado_dropdown,
-            ft.Text("Curso:", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700),
-            curso_dropdown
+            ft.Text("Perfil:", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700),
+            perfil_dropdown
         ],
         spacing=15,
         vertical_alignment=ft.CrossAxisAlignment.CENTER

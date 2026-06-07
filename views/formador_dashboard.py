@@ -36,8 +36,8 @@ def formador_dashboard_view(page: ft.Page, user, on_logout):
                     alignment=ft.Alignment.CENTER,
                     content=ft.Column([
                         ft.Icon(ft.Icons.INFO_OUTLINE, size=50, color=ft.Colors.GREY_400),
-                        ft.Text("Aún no tienes cursos asignados.", size=18, color=ft.Colors.GREY_500),
-                        ft.Text("El administrador debe asignarte cursos para que puedas ver estudiantes.", size=14, color=ft.Colors.GREY_400),
+                        ft.Text("Aún no tienes perfiles asignados.", size=18, color=ft.Colors.GREY_500),
+                        ft.Text("El administrador debe asignarte perfiles para que puedas ver estudiantes.", size=14, color=ft.Colors.GREY_400),
                     ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=10)
                 )
             )
@@ -59,7 +59,7 @@ def formador_dashboard_view(page: ft.Page, user, on_logout):
 
         # Dropdown
         perfil_dropdown = ft.Dropdown(
-            label="Selecciona un Curso",
+            label="Selecciona un Perfil",
             options=dropdown_options,
             value=state["selected_perfil"],
             width=350,
@@ -83,7 +83,7 @@ def formador_dashboard_view(page: ft.Page, user, on_logout):
             ft.Row([
                 ft.Column([
                     ft.Text("Mis Estudiantes", size=28, weight=ft.FontWeight.BOLD, color=INCES_BLUE),
-                    ft.Text(f"Total en este curso: {len(state['estudiantes_filtrados'])}", size=14, color=ft.Colors.GREY_600)
+                    ft.Text(f"Total en este perfil: {len(state['estudiantes_filtrados'])}", size=14, color=ft.Colors.GREY_600)
                 ]),
                 ft.Container(expand=True),
                 perfil_dropdown

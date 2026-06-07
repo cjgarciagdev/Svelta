@@ -2,10 +2,10 @@ import flet as ft
 from database.db import get_all_perfiles, create_perfil, toggle_perfil_status
 from config.theme import INCES_TEAL, INCES_BLUE
 
-def admin_cursos_view(page: ft.Page):
-    """Vista de Gestión de Perfiles (Cursos)."""
+def admin_perfiles_view(page: ft.Page):
+    """Vista de Gestión de Perfiles."""
 
-    cursos_grid = ft.Row(wrap=True, spacing=15, run_spacing=15)
+    perfiles_grid = ft.Row(wrap=True, spacing=15, run_spacing=15)
 
     nombre_field = ft.TextField(
         label="Nombre del nuevo perfil",
@@ -17,7 +17,7 @@ def admin_cursos_view(page: ft.Page):
     )
 
     def load_perfiles():
-        cursos_grid.controls.clear()
+        perfiles_grid.controls.clear()
         perfiles = get_all_perfiles()
 
         for perfil in perfiles:
@@ -64,7 +64,7 @@ def admin_cursos_view(page: ft.Page):
                     ]
                 )
             )
-            cursos_grid.controls.append(card)
+            perfiles_grid.controls.append(card)
 
         page.update()
 
@@ -94,7 +94,7 @@ def admin_cursos_view(page: ft.Page):
                 ft.Icon(ft.Icons.LIBRARY_BOOKS, color=INCES_TEAL, size=30),
                 ft.Text("Gestión de Perfiles", size=24, weight=ft.FontWeight.BOLD, color=INCES_BLUE),
             ]),
-            ft.Text("Crea y administra los perfiles (cursos) que ofrece el INCES.", color=ft.Colors.GREY_600),
+            ft.Text("Crea y administra los perfiles que ofrece el INCES.", color=ft.Colors.GREY_600),
             ft.Divider(height=20, color=ft.Colors.GREY_300),
             ft.Row([
                 nombre_field,
@@ -108,6 +108,6 @@ def admin_cursos_view(page: ft.Page):
                 )
             ]),
             ft.Container(height=10),
-            cursos_grid
+            perfiles_grid
         ])
     )

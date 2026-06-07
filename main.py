@@ -10,7 +10,7 @@ def main(page: ft.Page):
     # Inicializar base de datos
     init_db()
 
-    page.title = "Inces - Portal de Censo e Inscripción"
+    page.title = "Inces - Censo Inces"
     page.window.width = 1000
     page.window.height = 700
     page.window.min_width = 800

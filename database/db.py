@@ -53,7 +53,7 @@ def init_db():
     cursor.execute("UPDATE users SET was_formador = 1 WHERE role = 'ADMIN' AND id != 1 AND was_formador = 0")
     conn.commit()
 
-    # 2. Tabla de Perfiles (Cursos)
+    # 2. Tabla de Perfiles
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS perfiles (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -431,7 +431,7 @@ def get_stats():
     cursor.execute("SELECT posee_discapacidad, COUNT(*) FROM estudiantes GROUP BY posee_discapacidad")
     discapacidades = cursor.fetchall()
 
-    # Top 5 Cursos con mayor demanda
+    # Top 5 Perfiles con mayor demanda
     cursor.execute("""
         SELECT p.name, COUNT(e.id) as cantidad
         FROM perfiles p
@@ -503,7 +503,7 @@ def get_entidades_disponibles():
     return [row["entidad"] for row in rows]
 
 def assign_perfil_to_formador(formador_id, perfil_id, entidad=""):
-    """Asigna un perfil/curso a un formador, opcionalmente filtrado por entidad."""
+    """Asigna un perfil a un formador, opcionalmente filtrado por entidad."""
     conn = get_connection()
     cursor = conn.cursor()
     try:
@@ -516,7 +516,7 @@ def assign_perfil_to_formador(formador_id, perfil_id, entidad=""):
         conn.close()
 
 def remove_perfil_from_formador(formador_id, perfil_id, entidad=""):
-    """Quita un perfil/curso de un formador."""
+    """Quita un perfil de un formador."""
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM formador_perfil WHERE formador_id = ? AND perfil_id = ? AND entidad = ?", (formador_id, perfil_id, entidad))
@@ -524,7 +524,7 @@ def remove_perfil_from_formador(formador_id, perfil_id, entidad=""):
     conn.close()
 
 def get_perfiles_by_formador(formador_id):
-    """Obtiene los perfiles/cursos asignados a un formador."""
+    """Obtiene los perfiles asignados a un formador."""
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""

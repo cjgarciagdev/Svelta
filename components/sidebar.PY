@@ -46,7 +46,7 @@ def create_sidebar(user, on_nav_change, on_logout, on_switch_view=None):
                 # BOTONES DE NAVEGACIÓN
                 nav_button(ft.Icons.HOME, "Inicio", "inicio"),
                 nav_button(ft.Icons.PEOPLE_ALT, "Usuarios", "usuarios"),
-                nav_button(ft.Icons.LIBRARY_BOOKS, "Perfiles", "cursos"),
+                nav_button(ft.Icons.LIBRARY_BOOKS, "Perfiles", "perfiles"),
                 nav_button(ft.Icons.BADGE, "Censo CFS", "estudiantes"),
                 nav_button(ft.Icons.WORK, "Censo de Otros Ámbitos", "ambito"),
                 

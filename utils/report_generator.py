@@ -225,7 +225,7 @@ def generate_estudiantes_report(estudiantes: list, output_path: str | None = Non
         pdf.set_text_color(*DARK_TEXT)
 
         estado = est.get("estado_inscripcion") or "CENSADO"
-        curso = est.get("perfil_nombre") or "Sin asignar"
+        perfil = est.get("perfil_nombre") or "Sin asignar"
 
         discap = est.get("posee_discapacidad")
         discap_str = "Sí" if discap and str(discap).lower() in ("1", "sí", "si", "yes", "true") else "No"
@@ -243,7 +243,7 @@ def generate_estudiantes_report(estudiantes: list, output_path: str | None = Non
             (safe(est.get("correo"), 18), "Correo", "L"),
             (safe(est.get("direccion"), 18), "Dirección", "L"),
             (safe(est.get("entidad"), 15), "Entidad", "L"),
-            (safe(curso, 16), "Perfil", "L"),
+            (safe(perfil, 16), "Perfil", "L"),
         ]
 
         for text, key, align in cells:
@@ -512,7 +512,7 @@ def generate_estudiantes_xlsx_report(estudiantes: list, output_path: str | None 
             fill_color = row_colors[global_idx % 2]
 
             estado = est.get("estado_inscripcion") or "CENSADO"
-            curso = est.get("perfil_nombre") or "Sin asignar"
+            perfil = est.get("perfil_nombre") or "Sin asignar"
             discap = est.get("posee_discapacidad")
             discap_str = "Sí" if discap and str(discap).lower() in ("1", "sí", "si", "yes", "true") else "No"
 
@@ -529,7 +529,7 @@ def generate_estudiantes_xlsx_report(estudiantes: list, output_path: str | None 
                 est.get("correo") or "",
                 est.get("direccion") or "",
                 est.get("entidad") or "",
-                curso,
+                perfil,
                 estado,
                 est.get("fecha_censo") or "",
             ]

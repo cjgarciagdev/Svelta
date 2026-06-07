@@ -168,7 +168,7 @@ def admin_users_view(page: ft.Page, current_user):
         """Muestra un diálogo para asignar/quitar perfiles a un formador con Entidad opcional."""
         
         perfiles_dropdown = ft.Dropdown(
-            label="Curso / Perfil",
+            label="Perfil",
             options=[ft.dropdown.Option(str(p["id"]), p["name"]) for p in get_all_perfiles() if p["is_active"]],
             width=250,
             text_size=13
@@ -194,7 +194,7 @@ def admin_users_view(page: ft.Page, current_user):
             lista_asignados.controls.clear()
             asignados = get_perfiles_by_formador(user_id)
             if not asignados:
-                lista_asignados.controls.append(ft.Text("No tiene cursos asignados.", color=ft.Colors.GREY_500))
+                lista_asignados.controls.append(ft.Text("No tiene perfiles asignados.", color=ft.Colors.GREY_500))
             else:
                 for p in asignados:
                     p_dict = dict(p)
@@ -248,7 +248,7 @@ def admin_users_view(page: ft.Page, current_user):
             content=ft.Container(
                 width=600,
                 content=ft.Column([
-                    ft.Text("Agrega un curso y opcionalmente especifica una entidad para limitar su acceso.", size=12, color=ft.Colors.GREY_600),
+                    ft.Text("Agrega un perfil y opcionalmente especifica una entidad para limitar su acceso.", size=12, color=ft.Colors.GREY_600),
                     ft.Row([perfiles_dropdown, entidad_dropdown, add_btn], alignment=ft.MainAxisAlignment.START),
                     ft.Divider(height=20, color=ft.Colors.GREY_300),
                     ft.Text("Permisos Actuales:", weight=ft.FontWeight.BOLD),

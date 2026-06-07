@@ -1,7 +1,7 @@
 import flet as ft
 from components.sidebar import create_sidebar
 from views.admin_users import admin_users_view
-from views.admin_cursos import admin_cursos_view
+from views.admin_perfiles import admin_perfiles_view
 from views.admin_estudiantes import admin_estudiantes_view
 from views.admin_estudiantes_ambito import admin_estudiantes_ambito_view
 from views.admin_home import admin_home_view
@@ -28,8 +28,8 @@ def admin_dashboard_view(page: ft.Page, user, on_logout):
             content_area.content.controls.append(admin_home_view(page))
         elif view_name == "usuarios":
             content_area.content.controls.append(admin_users_view(page, user))
-        elif view_name == "cursos":
-            content_area.content.controls.append(admin_cursos_view(page))
+        elif view_name == "perfiles":
+            content_area.content.controls.append(admin_perfiles_view(page))
         elif view_name == "estudiantes":
             content_area.content = admin_estudiantes_view(page, user)
         elif view_name == "ambito":
