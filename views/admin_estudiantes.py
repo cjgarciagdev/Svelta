@@ -70,8 +70,11 @@ def admin_estudiantes_view(page: ft.Page, user=None):
     # Tabla
     estudiantes_table = ft.DataTable(
         columns=[
+            ft.DataColumn(ft.Text("#", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
             ft.DataColumn(ft.Text("Cédula", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
             ft.DataColumn(ft.Text("Nombres y Apellidos", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
+            ft.DataColumn(ft.Text("Género", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
+            ft.DataColumn(ft.Text("Correo", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
             ft.DataColumn(ft.Text("Curso / Perfil", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
             ft.DataColumn(ft.Text("Teléfono", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
             ft.DataColumn(ft.Text("Estado", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
@@ -167,7 +170,10 @@ def admin_estudiantes_view(page: ft.Page, user=None):
         if not page_data:
             estudiantes_table.rows.append(
                 ft.DataRow(cells=[
+                    ft.DataCell(ft.Text("-")),
                     ft.DataCell(ft.Text("Sin registros", color=ft.Colors.GREY_600)),
+                    ft.DataCell(ft.Text("-")),
+                    ft.DataCell(ft.Text("-")),
                     ft.DataCell(ft.Text("-")),
                     ft.DataCell(ft.Text("-")),
                     ft.DataCell(ft.Text("-")),
@@ -175,7 +181,8 @@ def admin_estudiantes_view(page: ft.Page, user=None):
                 ])
             )
         else:
-            for est in page_data:
+            for idx, est in enumerate(page_data):
+                num = (state["current_page"] - 1) * state["items_per_page"] + idx + 1
                 estado_val = est["estado_inscripcion"] or "CENSADO"
                 estado_color = INCES_TEAL if estado_val == 'INSCRITO' else ft.Colors.AMBER_700
                 if estado_val in ['RECHAZADO', 'RETIRADO']:
@@ -187,8 +194,11 @@ def admin_estudiantes_view(page: ft.Page, user=None):
                 
                 estudiantes_table.rows.append(
                     ft.DataRow(cells=[
+                        ft.DataCell(ft.Text(str(num), weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_600)),
                         ft.DataCell(ft.Text(str(est.get('cedula', '')))),
                         ft.DataCell(ft.Text(f"{est.get('nombres', '')} {est.get('apellidos', '')}")),
+                        ft.DataCell(ft.Text(est.get('genero', '') or "N/A")),
+                        ft.DataCell(ft.Text(est.get('correo', '') or "N/A")),
                         ft.DataCell(ft.Text(curso_nombre)),
                         ft.DataCell(ft.Text(est.get('telefono', '') or "N/A")),
                         ft.DataCell(ft.Text(estado_val, color=estado_color, weight=ft.FontWeight.BOLD)),
@@ -205,8 +215,12 @@ def admin_estudiantes_view(page: ft.Page, user=None):
     def fetch_data():
         """Carga los datos de la base de datos a la tabla visual."""
         raw_data = get_all_estudiantes()
-        # Convertir a dict
-        state["all_data"] = [dict(r) if not isinstance(r, dict) else r for r in raw_data]
+        # Solo mostrar los que son CFS (excluir los de AMBITO)
+        state["all_data"] = [
+            dict(r) if not isinstance(r, dict) else r
+            for r in raw_data
+            if (dict(r) if not isinstance(r, dict) else r).get('tipo_origen', 'GENERAL') != 'AMBITO'
+        ]
         handle_filter_change()
 
     def handle_generate_xlsx_report(e, group_by_trimester=True):
@@ -287,11 +301,8 @@ def admin_estudiantes_view(page: ft.Page, user=None):
     # Botones principales
     sync_btn = ft.ElevatedButton("Refrescar Censo", icon=ft.Icons.SYNC, color=ft.Colors.WHITE, bgcolor=INCES_BLUE, on_click=handle_sync)
 
-    report_btn = ft.ElevatedButton("PDF Trim.", icon=ft.Icons.PICTURE_AS_PDF, color=ft.Colors.WHITE, bgcolor=INCES_TEAL, on_click=lambda e: handle_generate_report(e, True), style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), tooltip="PDF agrupado por trimestre")
-    report_xlsx_btn = ft.ElevatedButton("Excel Trim.", icon=ft.Icons.GRID_ON, color=ft.Colors.WHITE, bgcolor=ft.Colors.GREEN_700, on_click=lambda e: handle_generate_xlsx_report(e, True), style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), tooltip="Excel agrupado por trimestre")
-
-    report_general_btn = ft.ElevatedButton("PDF General", icon=ft.Icons.PICTURE_AS_PDF, color=ft.Colors.WHITE, bgcolor=INCES_TEAL, on_click=lambda e: handle_generate_report(e, False), style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), tooltip="PDF general (todos los datos del formulario)")
-    report_xlsx_general_btn = ft.ElevatedButton("Excel General", icon=ft.Icons.GRID_ON, color=ft.Colors.WHITE, bgcolor=ft.Colors.GREEN_700, on_click=lambda e: handle_generate_xlsx_report(e, False), style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), tooltip="Excel general (todos los datos del formulario)")
+    report_btn = ft.ElevatedButton("PDF", icon=ft.Icons.PICTURE_AS_PDF, color=ft.Colors.WHITE, bgcolor=INCES_TEAL, on_click=lambda e: handle_generate_report(e, False), style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), tooltip="Generar PDF")
+    report_xlsx_btn = ft.ElevatedButton("Excel", icon=ft.Icons.GRID_ON, color=ft.Colors.WHITE, bgcolor=ft.Colors.GREEN_700, on_click=lambda e: handle_generate_xlsx_report(e, False), style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), tooltip="Generar Excel")
 
     is_super_admin = user and dict(user).get("was_formador", 0) == 0
 
@@ -301,9 +312,7 @@ def admin_estudiantes_view(page: ft.Page, user=None):
             ft.Row([
                 last_sync_text, loading_ring, sync_btn,
                 report_btn if is_super_admin else ft.Container(),
-                report_xlsx_btn if is_super_admin else ft.Container(),
-                report_general_btn if is_super_admin else ft.Container(),
-                report_xlsx_general_btn if is_super_admin else ft.Container()
+                report_xlsx_btn if is_super_admin else ft.Container()
             ], alignment=ft.MainAxisAlignment.END, spacing=8)
         ],
         alignment=ft.MainAxisAlignment.SPACE_BETWEEN
