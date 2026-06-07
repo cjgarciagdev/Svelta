@@ -180,19 +180,20 @@ def generate_estudiantes_report(estudiantes: list, output_path: str | None = Non
     # ─── Todas las columnas del formulario ─────────────────────
     col_widths = {
         "#":               7,
-        "Cédula":         20,
-        "Nombres":        22,
-        "Apellidos":      22,
-        "Género":         10,
+        "Cédula":         19,
+        "Nombres":        20,
+        "Apellidos":      20,
+        "Género":          8,
         "Edad":            7,
-        "Nivel Acad.":    20,
-        "Discapacidad":   12,
-        "Teléfono":       18,
-        "Correo":         28,
-        "Dirección":      28,
-        "Perfil":         25,
+        "Nivel Acad.":    18,
+        "Discapacidad":   10,
+        "Teléfono":       16,
+        "Correo":         22,
+        "Dirección":      22,
+        "Entidad":        20,
+        "Perfil":         22,
         "Estado":         15,
-        "Fecha Censo":    18,
+        "Fecha Censo":    16,
     }
     col_keys = list(col_widths.keys())
     row_h = 6
@@ -241,6 +242,7 @@ def generate_estudiantes_report(estudiantes: list, output_path: str | None = Non
             (safe(est.get("telefono"), 12), "Teléfono", "C"),
             (safe(est.get("correo"), 18), "Correo", "L"),
             (safe(est.get("direccion"), 18), "Dirección", "L"),
+            (safe(est.get("entidad"), 15), "Entidad", "L"),
             (safe(curso, 16), "Perfil", "L"),
         ]
 
@@ -411,7 +413,7 @@ def generate_estudiantes_xlsx_report(estudiantes: list, output_path: str | None 
     headers = [
         "#", "Cédula", "Nombres", "Apellidos", "Género", "Edad",
         "Nivel Académico", "Discapacidad", "Teléfono", "Correo",
-        "Dirección", "Perfil", "Estado", "Fecha Censo"
+        "Dirección", "Nombre de Entidad", "Perfil", "Estado", "Fecha Censo"
     ]
     num_cols = len(headers)
     last_col_letter = get_column_letter(num_cols)
@@ -526,6 +528,7 @@ def generate_estudiantes_xlsx_report(estudiantes: list, output_path: str | None 
                 est.get("telefono") or "N/A",
                 est.get("correo") or "",
                 est.get("direccion") or "",
+                est.get("entidad") or "",
                 curso,
                 estado,
                 est.get("fecha_censo") or "",
@@ -539,9 +542,9 @@ def generate_estudiantes_xlsx_report(estudiantes: list, output_path: str | None 
                     cell.font = font_data
                 else:
                     cell.font = font_data
-                if col_idx == 13:
+                if col_idx == 14:  # Estado
                     cell.font = Font(name="Segoe UI", size=10, bold=True, color=estado_colors.get(estado, "000000"))
-                cell.alignment = align_center if col_idx in (1, 2, 5, 6, 8, 9, 13, 14) else align_left
+                cell.alignment = align_center if col_idx in (1, 2, 5, 6, 8, 9, 14, 15) else align_left
 
             global_idx += 1
             curr_row += 1

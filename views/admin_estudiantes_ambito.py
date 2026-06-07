@@ -75,6 +75,7 @@ def admin_estudiantes_ambito_view(page: ft.Page, user=None):
             ft.DataColumn(ft.Text("Nombres y Apellidos", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
             ft.DataColumn(ft.Text("Género", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
             ft.DataColumn(ft.Text("Correo", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
+            ft.DataColumn(ft.Text("Nombre de Entidad", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
             ft.DataColumn(ft.Text("Curso / Perfil", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
             ft.DataColumn(ft.Text("Teléfono", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
             ft.DataColumn(ft.Text("Estado", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
@@ -178,6 +179,7 @@ def admin_estudiantes_ambito_view(page: ft.Page, user=None):
                     ft.DataCell(ft.Text("-")),
                     ft.DataCell(ft.Text("-")),
                     ft.DataCell(ft.Text("-")),
+                    ft.DataCell(ft.Text("-")),
                 ])
             )
         else:
@@ -199,6 +201,7 @@ def admin_estudiantes_ambito_view(page: ft.Page, user=None):
                         ft.DataCell(ft.Text(f"{est.get('nombres', '')} {est.get('apellidos', '')}")),
                         ft.DataCell(ft.Text(est.get('genero', '') or "N/A")),
                         ft.DataCell(ft.Text(est.get('correo', '') or "N/A")),
+                        ft.DataCell(ft.Text(est.get('entidad', '') or "N/A")),
                         ft.DataCell(ft.Text(curso_nombre)),
                         ft.DataCell(ft.Text(est.get('telefono', '') or "N/A")),
                         ft.DataCell(ft.Text(estado_val, color=estado_color, weight=ft.FontWeight.BOLD)),

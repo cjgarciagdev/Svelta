@@ -67,38 +67,21 @@ def admin_users_view(page: ft.Page, current_user):
                             data={"id": user["id"], "status": "REJECTED"},
                             on_click=handle_status_change
                         ),
-                    ])
-                # Solo el admin principal puede hacer a alguien admin directo desde PENDING
-                if dict(current_user).get("was_formador", 0) == 0:
-                    acciones_lista.append(
                         ft.IconButton(
                             icon=ft.Icons.ADMIN_PANEL_SETTINGS, 
                             icon_color=INCES_TEAL, 
                             tooltip="Hacer Administrador",
                             data={"id": user["id"], "role": "ADMIN"},
                             on_click=handle_role_change
-                        )
-                    )
-            elif user["role"] == "FORMADOR":
-                if dict(current_user).get("was_formador", 0) == 0:
-                    acciones_lista.append(
-                        ft.IconButton(
-                            icon=ft.Icons.ADMIN_PANEL_SETTINGS, 
-                            icon_color=ft.Colors.GREEN_400, 
-                            tooltip="Ascender a Administrador",
-                            data={"id": user["id"], "role": "ADMIN"},
-                            on_click=handle_role_change
-                        )
-                    )
-                    acciones_lista.append(
+                        ),
                         ft.IconButton(
                             icon=ft.Icons.MENU_BOOK,
                             icon_color=ft.Colors.BLUE_400,
                             tooltip="Asignar Perfiles",
                             data={"id": user["id"]},
                             on_click=lambda e: open_assign_dialog(e.control.data["id"])
-                        )
-                    )
+                        ),
+                    ])
             elif user["role"] == "ADMIN":
                 # Solo el admin principal puede degradar (y no puede degradarse a sí mismo)
                 if user["id"] != 1 and dict(current_user).get("was_formador", 0) == 0:
