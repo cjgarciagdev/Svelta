@@ -187,6 +187,7 @@ def generate_estudiantes_report(estudiantes: list, output_path: str | None = Non
         "Edad":            7,
         "Nivel Acad.":    18,
         "Discapacidad":   10,
+        "Tipo Discap.":   18,
         "Teléfono":       16,
         "Correo":         22,
         "Dirección":      22,
@@ -229,6 +230,7 @@ def generate_estudiantes_report(estudiantes: list, output_path: str | None = Non
 
         discap = est.get("posee_discapacidad")
         discap_str = "Sí" if discap and str(discap).lower() in ("1", "sí", "si", "yes", "true") else "No"
+        tipo_discap_str = safe(est.get("cual_discapacidad") or "", 16) if discap_str == "Sí" else ""
 
         cells = [
             (str(row_idx + 1), "#", "C"),
@@ -239,6 +241,7 @@ def generate_estudiantes_report(estudiantes: list, output_path: str | None = Non
             (str(est.get("edad") or ""), "Edad", "C"),
             (safe(est.get("nivel_academico"), 14), "Nivel Acad.", "L"),
             (discap_str, "Discapacidad", "C"),
+            (tipo_discap_str, "Tipo Discap.", "L"),
             (safe(est.get("telefono"), 12), "Teléfono", "C"),
             (safe(est.get("correo"), 18), "Correo", "L"),
             (safe(est.get("direccion"), 18), "Dirección", "L"),
@@ -412,7 +415,7 @@ def generate_estudiantes_xlsx_report(estudiantes: list, output_path: str | None 
     # ─── Todas las columnas ───────────────────────────────────
     headers = [
         "#", "Cédula", "Nombres", "Apellidos", "Género", "Edad",
-        "Nivel Académico", "Discapacidad", "Teléfono", "Correo",
+        "Nivel Académico", "Discapacidad", "Tipo Discapacidad", "Teléfono", "Correo",
         "Dirección", "Nombre de Entidad", "Perfil", "Estado", "Fecha Censo"
     ]
     num_cols = len(headers)
@@ -515,6 +518,7 @@ def generate_estudiantes_xlsx_report(estudiantes: list, output_path: str | None 
             perfil = est.get("perfil_nombre") or "Sin asignar"
             discap = est.get("posee_discapacidad")
             discap_str = "Sí" if discap and str(discap).lower() in ("1", "sí", "si", "yes", "true") else "No"
+            tipo_discap_str = est.get("cual_discapacidad") or "" if discap_str == "Sí" else ""
 
             data = [
                 global_idx,
@@ -525,6 +529,7 @@ def generate_estudiantes_xlsx_report(estudiantes: list, output_path: str | None 
                 est.get("edad") or "",
                 est.get("nivel_academico") or "",
                 discap_str,
+                tipo_discap_str,
                 est.get("telefono") or "N/A",
                 est.get("correo") or "",
                 est.get("direccion") or "",

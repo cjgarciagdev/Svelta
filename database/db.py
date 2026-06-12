@@ -410,17 +410,35 @@ def sync_google_forms(url, token, tipo_origen="GENERAL"):
 
 def get_all_estudiantes():
     """Obtiene todos los estudiantes con sus respectivos perfiles."""
+    import datetime
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
         SELECT e.*, p.name as perfil_nombre 
         FROM estudiantes e
         LEFT JOIN perfiles p ON e.perfil_id = p.id
-        ORDER BY e.fecha_censo ASC
     """)
     estudiantes = cursor.fetchall()
     conn.close()
-    return estudiantes
+
+    def parse_fecha_sort(row):
+        fecha = row["fecha_censo"] or ""
+        for fmt in ("%d/%m/%Y %H:%M:%S", "%d/%m/%Y %H:%M", "%-d/%-m/%Y %H:%M:%S", "%d/%m/%Y"):
+            try:
+                return datetime.datetime.strptime(fecha.strip(), fmt)
+            except ValueError:
+                pass
+        # Intento flexible: separar por espacios y luego por /
+        try:
+            parts = fecha.strip().split(" ")
+            date_part = parts[0]
+            d, m, y = date_part.split("/")
+            time_part = parts[1] if len(parts) > 1 else "00:00:00"
+            return datetime.datetime(int(y), int(m), int(d))
+        except Exception:
+            return datetime.datetime(2000, 1, 1)
+
+    return sorted(estudiantes, key=parse_fecha_sort)
 
 def get_stats():
     """Obtiene estadísticas básicas para el dashboard."""

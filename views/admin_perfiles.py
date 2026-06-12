@@ -68,13 +68,6 @@ def admin_perfiles_view(page: ft.Page):
 
         page.update()
 
-    def handle_create(e):
-        if not nombre_field.value:
-            return
-        create_perfil(nombre_field.value.strip())
-        nombre_field.value = ""
-        load_perfiles()
-
     def handle_toggle(e):
         perfil_id = e.control.data["id"]
         new_status = e.control.data["new_status"]
@@ -94,19 +87,8 @@ def admin_perfiles_view(page: ft.Page):
                 ft.Icon(ft.Icons.LIBRARY_BOOKS, color=INCES_TEAL, size=30),
                 ft.Text("Gestión de Perfiles", size=24, weight=ft.FontWeight.BOLD, color=INCES_BLUE),
             ]),
-            ft.Text("Crea y administra los perfiles que ofrece el INCES.", color=ft.Colors.GREY_600),
+            ft.Text("Administra los perfiles que ofrece el INCES.", color=ft.Colors.GREY_600),
             ft.Divider(height=20, color=ft.Colors.GREY_300),
-            ft.Row([
-                nombre_field,
-                ft.ElevatedButton(
-                    "Crear Perfil",
-                    bgcolor=INCES_TEAL,
-                    color=ft.Colors.WHITE,
-                    height=45,
-                    style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)),
-                    on_click=handle_create
-                )
-            ]),
             ft.Container(height=10),
             perfiles_grid
         ])
