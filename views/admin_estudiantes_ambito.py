@@ -1,4 +1,5 @@
 import flet as ft
+from flet import Border, BorderSide, Padding
 from database.db import get_all_estudiantes, sync_google_forms, get_all_perfiles
 from config.theme import INCES_BLUE, INCES_TEAL
 from utils.report_generator import generate_estudiantes_report, generate_estudiantes_xlsx_report
@@ -81,7 +82,7 @@ def admin_estudiantes_ambito_view(page: ft.Page, user=None):
             ft.DataColumn(ft.Text("Estado", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
         ],
         rows=[],
-        border=ft.border.all(1, ft.Colors.PURPLE_200),
+        border=Border.all(1, ft.Colors.PURPLE_200),
         border_radius=10,
         heading_row_color=ft.Colors.PURPLE_50,
         expand=True

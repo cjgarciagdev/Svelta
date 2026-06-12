@@ -1,7 +1,9 @@
-# Configuración para el envío de correos de recuperación de contraseña
+import os
+from dotenv import load_dotenv
 
-# Reemplazar con el correo oficial del INCES
-EMAIL_SENDER = "correo.ejemplo.inces@gmail.com"
+# Cargar las variables de entorno desde el archivo .env
+load_dotenv()
 
-# Reemplazar con la "Contraseña de aplicación" de Google (16 caracteres, sin espacios)
-EMAIL_PASSWORD = "abcd efgh ijkl mnop"
+# Obtener las credenciales
+EMAIL_SENDER = os.getenv("EMAIL_SENDER", "")
+EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD", "")

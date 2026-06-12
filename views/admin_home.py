@@ -1,4 +1,5 @@
 import flet as ft
+from flet import Border, BorderSide, Padding
 from database.db import get_stats
 from config.theme import INCES_BLUE, INCES_TEAL
 
@@ -74,7 +75,7 @@ def admin_home_view(page: ft.Page):
     # ── 1. Tarjeta Total ───────────────────────────────────────────────────────
     tarjeta_total = ft.Container(
         bgcolor=INCES_BLUE,
-        padding=ft.padding.Padding(left=30, top=25, right=30, bottom=25),
+        padding=Padding(left=30, top=25, right=30, bottom=25),
         border_radius=15,
         shadow=ft.BoxShadow(blur_radius=12, color=ft.Colors.BLACK26, offset=ft.Offset(0, 6)),
         content=ft.Row(

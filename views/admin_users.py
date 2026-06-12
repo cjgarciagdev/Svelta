@@ -1,5 +1,7 @@
 import flet as ft
+from flet import Border, BorderSide, Padding
 import hashlib
+import bcrypt
 from database.db import get_all_users, update_user_status, update_user_role, delete_user, update_user_password, get_all_perfiles, assign_perfil_to_formador, remove_perfil_from_formador, get_perfiles_by_formador, get_entidades_disponibles
 from config.theme import INCES_TEAL, INCES_BLUE
 
@@ -138,7 +140,7 @@ def admin_users_view(page: ft.Page, current_user):
                                 color=INCES_TEAL if user["role"] == "ADMIN" else ft.Colors.BLACK87
                             ),
                             bgcolor=ft.Colors.TEAL_50 if user["role"] == "ADMIN" else ft.Colors.TRANSPARENT,
-                            padding=ft.padding.Padding(left=8, top=4, right=8, bottom=4),
+                            padding=Padding(left=8, top=4, right=8, bottom=4),
                             border_radius=10
                         )),
                         ft.DataCell(estado_chip),
@@ -160,7 +162,7 @@ def admin_users_view(page: ft.Page, current_user):
                 page.update()
                 return
             
-            hashed_pw = hashlib.sha256(new_pw_field.value.encode()).hexdigest()
+            hashed_pw = bcrypt.hashpw(new_pw_field.value.encode(), bcrypt.gensalt()).decode()
             update_user_password(user_id, hashed_pw)
             dialog.open = False
             page.snack_bar = ft.SnackBar(ft.Text(f"Contraseña de {user_name} actualizada correctamente"), bgcolor=ft.Colors.GREEN_700)
@@ -302,7 +304,7 @@ def admin_users_view(page: ft.Page, current_user):
                     ft.Text("Permisos Actuales:", weight=ft.FontWeight.BOLD),
                     ft.Container(
                         content=lista_asignados,
-                        border=ft.border.all(1, ft.Colors.GREY_200),
+                        border=Border.all(1, ft.Colors.GREY_200),
                         border_radius=8,
                         padding=10
                     )

@@ -1,10 +1,11 @@
 import flet as ft
 import hashlib
+import bcrypt
+import secrets
 from config.theme import INCES_TEAL, INCES_BLUE, LIGHT_BLUE_BG, LIGHT_BLUE_BORDER, TEXT_BLUE
 from components.header import create_header
 from database.db import get_user_by_email, update_user_password
 import time
-import random
 
 def login_view(page: ft.Page, on_register_click, on_login_success):
     """Vista principal de Login para Admins y Formadores."""
@@ -30,9 +31,20 @@ def login_view(page: ft.Page, on_register_click, on_login_success):
             page.update()
             return
             
-        hashed_pw = hashlib.sha256(password_field.value.encode()).hexdigest()
+        hashed_pw_attempt = password_field.value.encode()
+        stored_hash = user["password_hash"]
         
-        if user["password_hash"] != hashed_pw:
+        is_valid = False
+        if stored_hash.startswith("$2b$"):
+            is_valid = bcrypt.checkpw(hashed_pw_attempt, stored_hash.encode())
+        else:
+            is_valid = (stored_hash == hashlib.sha256(hashed_pw_attempt).hexdigest())
+            if is_valid:
+                # Migración silenciosa
+                new_bcrypt_hash = bcrypt.hashpw(hashed_pw_attempt, bcrypt.gensalt()).decode()
+                update_user_password(user["id"], new_bcrypt_hash)
+        
+        if not is_valid:
             error_text.value = "Contraseña incorrecta."
             error_text.visible = True
             page.update()
@@ -94,7 +106,7 @@ def login_view(page: ft.Page, on_register_click, on_login_success):
                     return
                 
                 state["email"] = email_rec_field.value
-                state["code"] = str(random.randint(100000, 999999))
+                state["code"] = "".join(str(secrets.choice(range(10))) for _ in range(6))
                 
                 btn_action.disabled = True
                 btn_action.text = "Enviando..."
@@ -138,7 +150,7 @@ def login_view(page: ft.Page, on_register_click, on_login_success):
                     return
                     
                 user = get_user_by_email(state["email"])
-                hashed_pw = hashlib.sha256(new_pw_rec_field.value.encode()).hexdigest()
+                hashed_pw = bcrypt.hashpw(new_pw_rec_field.value.encode(), bcrypt.gensalt()).decode()
                 update_user_password(user["id"], hashed_pw)
                 
                 dialog.open = False
