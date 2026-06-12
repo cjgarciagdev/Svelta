@@ -236,6 +236,14 @@ def update_user_role(user_id, new_role):
     conn.commit()
     conn.close()
 
+def update_user_password(user_id, new_password_hash):
+    """Actualiza la contraseña de un usuario."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET password_hash = ? WHERE id = ?", (new_password_hash, user_id))
+    conn.commit()
+    conn.close()
+
 def delete_user(user_id):
     """Elimina permanentemente un usuario de la base de datos."""
     # Proteger al admin principal

@@ -79,4 +79,5 @@ def main(page: ft.Page):
     # Mostrar splash al iniciar
     show_splash()
 
-ft.run(main, assets_dir=".")
+ft.app(target=main, view=ft.AppView.WEB_BROWSER, port=8550, host="0.0.0.0", assets_dir=".")
+# ft.run(main, assets_dir=".")

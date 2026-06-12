@@ -1,5 +1,6 @@
 import flet as ft
-from database.db import get_all_users, update_user_status, update_user_role, delete_user, get_all_perfiles, assign_perfil_to_formador, remove_perfil_from_formador, get_perfiles_by_formador, get_entidades_disponibles
+import hashlib
+from database.db import get_all_users, update_user_status, update_user_role, delete_user, update_user_password, get_all_perfiles, assign_perfil_to_formador, remove_perfil_from_formador, get_perfiles_by_formador, get_entidades_disponibles
 from config.theme import INCES_TEAL, INCES_BLUE
 
 def admin_users_view(page: ft.Page, current_user):
@@ -106,6 +107,15 @@ def admin_users_view(page: ft.Page, current_user):
                         on_click=lambda e: open_delete_dialog(e.control.data["id"])
                     )
                 )
+                acciones_lista.append(
+                    ft.IconButton(
+                        icon=ft.Icons.VPN_KEY, 
+                        icon_color=ft.Colors.ORANGE_500,
+                        tooltip="Restablecer Contraseña",
+                        data={"id": user["id"], "name": user["nombres"]},
+                        on_click=lambda e: open_reset_password_dialog(e.control.data["id"], e.control.data["name"])
+                    )
+                )
 
             acciones = ft.Row(acciones_lista)
 
@@ -137,6 +147,44 @@ def admin_users_view(page: ft.Page, current_user):
                 )
             )
         
+        page.update()
+
+    def open_reset_password_dialog(user_id, user_name):
+        new_pw_field = ft.TextField(label="Nueva Contraseña", password=True, can_reveal_password=True, text_size=13)
+        err_pw = ft.Text("", color=ft.Colors.RED_600, size=12, visible=False)
+
+        def save_password(e):
+            if len(new_pw_field.value) < 6:
+                err_pw.value = "La contraseña debe tener al menos 6 caracteres."
+                err_pw.visible = True
+                page.update()
+                return
+            
+            hashed_pw = hashlib.sha256(new_pw_field.value.encode()).hexdigest()
+            update_user_password(user_id, hashed_pw)
+            dialog.open = False
+            page.snack_bar = ft.SnackBar(ft.Text(f"Contraseña de {user_name} actualizada correctamente"), bgcolor=ft.Colors.GREEN_700)
+            page.snack_bar.open = True
+            page.update()
+
+        def close_dlg(e):
+            dialog.open = False
+            page.update()
+
+        dialog = ft.AlertDialog(
+            title=ft.Text(f"Restablecer contraseña de {user_name}", size=18, weight=ft.FontWeight.BOLD),
+            content=ft.Column([
+                ft.Text("Escribe la nueva contraseña para este usuario. (Mínimo 6 caracteres).", size=13),
+                new_pw_field,
+                err_pw
+            ], tight=True, spacing=10),
+            actions=[
+                ft.TextButton("Cancelar", on_click=close_dlg),
+                ft.ElevatedButton("Guardar", bgcolor=INCES_TEAL, color=ft.Colors.WHITE, on_click=save_password)
+            ]
+        )
+        page.overlay.append(dialog)
+        dialog.open = True
         page.update()
 
     def open_delete_dialog(user_id):
