@@ -68,6 +68,19 @@ def admin_estudiantes_ambito_view(page: ft.Page, user=None):
     for p in perfiles:
         perfil_dropdown.options.append(ft.dropdown.Option(p["name"]))
 
+    entidad_dropdown = ft.Dropdown(
+        options=[ft.dropdown.Option("TODAS")],
+        value="TODAS",
+        label="Entidad",
+        width=200,
+        height=40,
+        text_size=13,
+        border_radius=8,
+        border_color=ft.Colors.GREY_300,
+        focused_border_color=ft.Colors.PURPLE_600,
+        on_select=lambda e: handle_filter_change()
+    )
+
     # Tabla
     estudiantes_table = ft.DataTable(
         columns=[
@@ -126,11 +139,13 @@ def admin_estudiantes_ambito_view(page: ft.Page, user=None):
         query = (search_field.value or "").lower().strip()
         f_estado = estado_dropdown.value
         f_perfil = perfil_dropdown.value
+        f_entidad = entidad_dropdown.value
 
         filtered = []
         for est in state["all_data"]:
             estado = est["estado_inscripcion"] or "CENSADO"
             perfil = est["perfil_nombre"] or "Sin asignar"
+            entidad = est.get("entidad") or ""
             
             # Filtro Estado
             if f_estado != "TODOS" and estado != f_estado:
@@ -138,6 +153,10 @@ def admin_estudiantes_ambito_view(page: ft.Page, user=None):
             
             # Filtro Perfil
             if f_perfil != "TODOS" and perfil != f_perfil:
+                continue
+            
+            # Filtro Entidad
+            if f_entidad != "TODAS" and entidad != f_entidad:
                 continue
             
             # Filtro Búsqueda
@@ -221,6 +240,13 @@ def admin_estudiantes_ambito_view(page: ft.Page, user=None):
         raw_data = get_all_estudiantes()
         # Solo cargar los que son de AMBITO
         state["all_data"] = [dict(r) for r in raw_data if dict(r).get('tipo_origen', 'GENERAL') == 'AMBITO']
+        
+        # Actualizar el dropdown de entidades con los valores reales
+        entidades = sorted({est.get("entidad") or "" for est in state["all_data"] if est.get("entidad")})
+        entidad_dropdown.options = [ft.dropdown.Option("TODAS")] + [ft.dropdown.Option(e) for e in entidades]
+        if entidad_dropdown.value not in (["TODAS"] + entidades):
+            entidad_dropdown.value = "TODAS"
+        
         handle_filter_change()
 
     def handle_generate_xlsx_report(e):
@@ -324,7 +350,9 @@ def admin_estudiantes_ambito_view(page: ft.Page, user=None):
             ft.Text("Estado:", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700),
             estado_dropdown,
             ft.Text("Perfil:", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700),
-            perfil_dropdown
+            perfil_dropdown,
+            ft.Text("Entidad:", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700),
+            entidad_dropdown
         ],
         spacing=15,
         vertical_alignment=ft.CrossAxisAlignment.CENTER

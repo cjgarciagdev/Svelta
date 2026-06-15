@@ -76,13 +76,12 @@ def login_view(page: ft.Page, on_register_click, on_login_success):
     def open_recovery_dialog(e):
         state = {"email": "", "code": "", "step": 1}
         
-        email_rec_field = ft.TextField(label="Correo Electrónico", text_size=13, width=300)
-        code_rec_field = ft.TextField(label="Código de 6 dígitos", text_size=13, width=300, visible=False)
-        new_pw_rec_field = ft.TextField(label="Nueva Contraseña", password=True, can_reveal_password=True, text_size=13, width=300, visible=False)
+        email_rec_field = ft.TextField(label="Correo Electrónico", text_size=13, width=320)
+        code_rec_field = ft.TextField(label="Código de 6 dígitos", text_size=13, width=320, visible=False)
+        new_pw_rec_field = ft.TextField(label="Nueva Contraseña", password=True, can_reveal_password=True, text_size=13, width=320, visible=False)
         err_rec = ft.Text("", color=ft.Colors.RED_600, size=12, visible=False)
         instrucciones_text = ft.Text("Ingresa tu correo registrado para enviarte un código.", size=13)
-        
-        btn_action = ft.ElevatedButton("Enviar Código", bgcolor=INCES_TEAL, color=ft.Colors.WHITE)
+        btn_action = ft.ElevatedButton("Enviar Código", bgcolor=INCES_TEAL, color=ft.Colors.WHITE, width=180)
 
         def close_dlg(e):
             dialog.open = False
@@ -118,7 +117,7 @@ def login_view(page: ft.Page, on_register_click, on_login_success):
                 btn_action.disabled = False
                 if enviado:
                     state["step"] = 2
-                    instrucciones_text.value = f"Hemos enviado un código a {state['email']}."
+                    instrucciones_text.value = f"Hemos enviado un código a {state['email']}. Revisa tu correo."
                     email_rec_field.visible = False
                     code_rec_field.visible = True
                     btn_action.text = "Verificar Código"
@@ -130,13 +129,13 @@ def login_view(page: ft.Page, on_register_click, on_login_success):
                 
             elif state["step"] == 2:
                 if code_rec_field.value.strip() != state["code"]:
-                    err_rec.value = "Código incorrecto."
+                    err_rec.value = "Código incorrecto. Intenta de nuevo."
                     err_rec.visible = True
                     page.update()
                     return
                 
                 state["step"] = 3
-                instrucciones_text.value = "Código verificado. Ingresa tu nueva contraseña."
+                instrucciones_text.value = "✅ Código verificado. Ahora escribe tu nueva contraseña."
                 code_rec_field.visible = False
                 new_pw_rec_field.visible = True
                 btn_action.text = "Guardar Contraseña"
@@ -154,7 +153,7 @@ def login_view(page: ft.Page, on_register_click, on_login_success):
                 update_user_password(user["id"], hashed_pw)
                 
                 dialog.open = False
-                page.snack_bar = ft.SnackBar(ft.Text("¡Contraseña actualizada con éxito!"), bgcolor=ft.Colors.GREEN_700)
+                page.snack_bar = ft.SnackBar(ft.Text("¡Contraseña actualizada con éxito! Ya puedes iniciar sesión."), bgcolor=ft.Colors.GREEN_700)
                 page.snack_bar.open = True
                 page.update()
 
@@ -167,12 +166,15 @@ def login_view(page: ft.Page, on_register_click, on_login_success):
                 email_rec_field,
                 code_rec_field,
                 new_pw_rec_field,
-                err_rec
-            ], tight=True, spacing=10),
-            actions=[
-                ft.TextButton("Cancelar", on_click=close_dlg),
-                btn_action
-            ]
+                err_rec,
+                ft.Container(height=5),
+                ft.Row([
+                    ft.TextButton("Cancelar", on_click=close_dlg),
+                    btn_action
+                ], alignment=ft.MainAxisAlignment.END)
+            ], tight=True, spacing=10, width=340),
+            actions=[],
+            actions_padding=ft.Padding(0, 0, 0, 0)
         )
         page.overlay.append(dialog)
         dialog.open = True
