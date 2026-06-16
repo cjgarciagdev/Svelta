@@ -3,10 +3,10 @@ from database.db import get_all_perfiles, create_perfil, toggle_perfil_status
 from config.theme import INCES_TEAL, INCES_BLUE
 from components.help_button import create_help_button
 
-def admin_cursos_view(page: ft.Page):
-    """Vista de Gestión de Perfiles (Cursos)."""
+def admin_perfiles_view(page: ft.Page):
+    """Vista de Gestión de Perfiles."""
 
-    cursos_grid = ft.Row(wrap=True, spacing=15, run_spacing=15)
+    perfiles_grid = ft.Row(wrap=True, spacing=15, run_spacing=15)
 
     nombre_field = ft.TextField(
         label="Nombre del nuevo perfil",
@@ -18,7 +18,7 @@ def admin_cursos_view(page: ft.Page):
     )
 
     def load_perfiles():
-        cursos_grid.controls.clear()
+        perfiles_grid.controls.clear()
         perfiles = get_all_perfiles()
 
         for perfil in perfiles:
@@ -65,16 +65,9 @@ def admin_cursos_view(page: ft.Page):
                     ]
                 )
             )
-            cursos_grid.controls.append(card)
+            perfiles_grid.controls.append(card)
 
         page.update()
-
-    def handle_create(e):
-        if not nombre_field.value:
-            return
-        create_perfil(nombre_field.value.strip())
-        nombre_field.value = ""
-        load_perfiles()
 
     def handle_toggle(e):
         perfil_id = e.control.data["id"]
@@ -102,20 +95,9 @@ def admin_cursos_view(page: ft.Page):
                     "• Los perfiles inactivos no estarán disponibles en otros módulos."
                 ),
             ]),
-            ft.Text("Crea y administra los perfiles (cursos) que ofrece el INCES.", color=ft.Colors.GREY_600),
+            ft.Text("Administra los perfiles que ofrece el INCES.", color=ft.Colors.GREY_600),
             ft.Divider(height=20, color=ft.Colors.GREY_300),
-            ft.Row([
-                nombre_field,
-                ft.ElevatedButton(
-                    "Crear Perfil",
-                    bgcolor=INCES_TEAL,
-                    color=ft.Colors.WHITE,
-                    height=45,
-                    style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)),
-                    on_click=handle_create
-                )
-            ]),
             ft.Container(height=10),
-            cursos_grid
+            perfiles_grid
         ])
     )

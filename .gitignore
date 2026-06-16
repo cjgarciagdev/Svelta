@@ -1,15 +1,11 @@
 # Python
 __pycache__/
+venv/
 *.pyc
+.env
 
-# Base de datos
+# Database
 *.sqlite
-*.db
-inces.sqlite
 
-# Flet / OS
-.flet/
-.DS_Store
-
-Script.md
-
+# Reports
+reports/

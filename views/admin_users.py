@@ -1,5 +1,8 @@
 import flet as ft
-from database.db import get_all_users, update_user_status, update_user_role, delete_user, get_all_perfiles, assign_perfil_to_formador, remove_perfil_from_formador, get_perfiles_by_formador, get_entidades_disponibles
+from flet import Border, BorderSide, Padding
+import hashlib
+import bcrypt
+from database.db import get_all_users, update_user_status, update_user_role, delete_user, update_user_password, get_all_perfiles, assign_perfil_to_formador, remove_perfil_from_formador, get_perfiles_by_formador, get_entidades_disponibles
 from config.theme import INCES_TEAL, INCES_BLUE
 from components.help_button import create_help_button
 
@@ -52,45 +55,40 @@ def admin_users_view(page: ft.Page, current_user):
             acciones_lista = []
             
             if user["role"] == "FORMADOR":
-                acciones_lista.extend([
-                    ft.IconButton(
-                        icon=ft.Icons.CHECK_CIRCLE, 
-                        icon_color=ft.Colors.GREEN_500, 
-                        tooltip="Aprobar",
-                        data={"id": user["id"], "status": "APPROVED"},
-                        on_click=handle_status_change
-                    ),
-                    ft.IconButton(
-                        icon=ft.Icons.CANCEL, 
-                        icon_color=ft.Colors.RED_500, 
-                        tooltip="Rechazar",
-                        data={"id": user["id"], "status": "REJECTED"},
-                        on_click=handle_status_change
-                    ),
-                ])
-                # Solo el admin principal puede ascender
-                if current_user["id"] == 1:
-                    acciones_lista.append(
+                if dict(current_user).get("was_formador", 0) == 0:
+                    acciones_lista.extend([
+                        ft.IconButton(
+                            icon=ft.Icons.CHECK_CIRCLE, 
+                            icon_color=ft.Colors.GREEN_500, 
+                            tooltip="Aprobar",
+                            data={"id": user["id"], "status": "APPROVED"},
+                            on_click=handle_status_change
+                        ),
+                        ft.IconButton(
+                            icon=ft.Icons.CANCEL, 
+                            icon_color=ft.Colors.RED_500, 
+                            tooltip="Rechazar",
+                            data={"id": user["id"], "status": "REJECTED"},
+                            on_click=handle_status_change
+                        ),
                         ft.IconButton(
                             icon=ft.Icons.ADMIN_PANEL_SETTINGS, 
                             icon_color=INCES_TEAL, 
                             tooltip="Hacer Administrador",
                             data={"id": user["id"], "role": "ADMIN"},
                             on_click=handle_role_change
-                        )
-                    )
-                acciones_lista.append(
-                    ft.IconButton(
-                        icon=ft.Icons.MENU_BOOK,
-                        icon_color=ft.Colors.BLUE_400,
-                        tooltip="Asignar Perfiles",
-                        data={"id": user["id"]},
-                        on_click=lambda e: open_assign_dialog(e.control.data["id"])
-                    )
-                )
+                        ),
+                        ft.IconButton(
+                            icon=ft.Icons.MENU_BOOK,
+                            icon_color=ft.Colors.BLUE_400,
+                            tooltip="Asignar Perfiles",
+                            data={"id": user["id"]},
+                            on_click=lambda e: open_assign_dialog(e.control.data["id"])
+                        ),
+                    ])
             elif user["role"] == "ADMIN":
                 # Solo el admin principal puede degradar (y no puede degradarse a sí mismo)
-                if user["id"] != 1 and current_user["id"] == 1:
+                if user["id"] != 1 and dict(current_user).get("was_formador", 0) == 0:
                     acciones_lista.append(
                         ft.IconButton(
                             icon=ft.Icons.REMOVE_MODERATOR, 
@@ -102,7 +100,7 @@ def admin_users_view(page: ft.Page, current_user):
                     )
             
             # Botón de eliminar (disponible para todos menos el admin principal)
-            if user["id"] != 1:
+            if user["id"] != 1 and dict(current_user).get("was_formador", 0) == 0:
                 acciones_lista.append(
                     ft.IconButton(
                         icon=ft.Icons.DELETE_FOREVER_OUTLINED, 
@@ -110,6 +108,15 @@ def admin_users_view(page: ft.Page, current_user):
                         tooltip="Eliminar Usuario",
                         data={"id": user["id"]},
                         on_click=lambda e: open_delete_dialog(e.control.data["id"])
+                    )
+                )
+                acciones_lista.append(
+                    ft.IconButton(
+                        icon=ft.Icons.VPN_KEY, 
+                        icon_color=ft.Colors.ORANGE_500,
+                        tooltip="Restablecer Contraseña",
+                        data={"id": user["id"], "name": user["nombres"]},
+                        on_click=lambda e: open_reset_password_dialog(e.control.data["id"], e.control.data["name"])
                     )
                 )
 
@@ -134,7 +141,7 @@ def admin_users_view(page: ft.Page, current_user):
                                 color=INCES_TEAL if user["role"] == "ADMIN" else ft.Colors.BLACK87
                             ),
                             bgcolor=ft.Colors.TEAL_50 if user["role"] == "ADMIN" else ft.Colors.TRANSPARENT,
-                            padding=ft.padding.Padding(left=8, top=4, right=8, bottom=4),
+                            padding=Padding(left=8, top=4, right=8, bottom=4),
                             border_radius=10
                         )),
                         ft.DataCell(estado_chip),
@@ -143,6 +150,44 @@ def admin_users_view(page: ft.Page, current_user):
                 )
             )
         
+        page.update()
+
+    def open_reset_password_dialog(user_id, user_name):
+        new_pw_field = ft.TextField(label="Nueva Contraseña", password=True, can_reveal_password=True, text_size=13)
+        err_pw = ft.Text("", color=ft.Colors.RED_600, size=12, visible=False)
+
+        def save_password(e):
+            if len(new_pw_field.value) < 6:
+                err_pw.value = "La contraseña debe tener al menos 6 caracteres."
+                err_pw.visible = True
+                page.update()
+                return
+            
+            hashed_pw = bcrypt.hashpw(new_pw_field.value.encode(), bcrypt.gensalt()).decode()
+            update_user_password(user_id, hashed_pw)
+            dialog.open = False
+            page.snack_bar = ft.SnackBar(ft.Text(f"Contraseña de {user_name} actualizada correctamente"), bgcolor=ft.Colors.GREEN_700)
+            page.snack_bar.open = True
+            page.update()
+
+        def close_dlg(e):
+            dialog.open = False
+            page.update()
+
+        dialog = ft.AlertDialog(
+            title=ft.Text(f"Restablecer contraseña de {user_name}", size=18, weight=ft.FontWeight.BOLD),
+            content=ft.Column([
+                ft.Text("Escribe la nueva contraseña para este usuario. (Mínimo 6 caracteres).", size=13),
+                new_pw_field,
+                err_pw
+            ], tight=True, spacing=10),
+            actions=[
+                ft.TextButton("Cancelar", on_click=close_dlg),
+                ft.ElevatedButton("Guardar", bgcolor=INCES_TEAL, color=ft.Colors.WHITE, on_click=save_password)
+            ]
+        )
+        page.overlay.append(dialog)
+        dialog.open = True
         page.update()
 
     def open_delete_dialog(user_id):
@@ -174,7 +219,7 @@ def admin_users_view(page: ft.Page, current_user):
         """Muestra un diálogo para asignar/quitar perfiles a un formador con Entidad opcional."""
         
         perfiles_dropdown = ft.Dropdown(
-            label="Curso / Perfil",
+            label="Perfil",
             options=[ft.dropdown.Option(str(p["id"]), p["name"]) for p in get_all_perfiles() if p["is_active"]],
             width=250,
             text_size=13
@@ -200,7 +245,7 @@ def admin_users_view(page: ft.Page, current_user):
             lista_asignados.controls.clear()
             asignados = get_perfiles_by_formador(user_id)
             if not asignados:
-                lista_asignados.controls.append(ft.Text("No tiene cursos asignados.", color=ft.Colors.GREY_500))
+                lista_asignados.controls.append(ft.Text("No tiene perfiles asignados.", color=ft.Colors.GREY_500))
             else:
                 for p in asignados:
                     p_dict = dict(p)
@@ -254,13 +299,13 @@ def admin_users_view(page: ft.Page, current_user):
             content=ft.Container(
                 width=600,
                 content=ft.Column([
-                    ft.Text("Agrega un curso y opcionalmente especifica una entidad para limitar su acceso.", size=12, color=ft.Colors.GREY_600),
+                    ft.Text("Agrega un perfil y opcionalmente especifica una entidad para limitar su acceso.", size=12, color=ft.Colors.GREY_600),
                     ft.Row([perfiles_dropdown, entidad_dropdown, add_btn], alignment=ft.MainAxisAlignment.START),
                     ft.Divider(height=20, color=ft.Colors.GREY_300),
                     ft.Text("Permisos Actuales:", weight=ft.FontWeight.BOLD),
                     ft.Container(
                         content=lista_asignados,
-                        border=ft.border.Border.all(1, ft.Colors.GREY_200),
+                        border=Border.all(1, ft.Colors.GREY_200),
                         border_radius=8,
                         padding=10
                     )

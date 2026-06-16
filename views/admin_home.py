@@ -1,4 +1,5 @@
 import flet as ft
+from flet import Border, BorderSide, Padding
 from database.db import get_stats
 from config.theme import INCES_BLUE, INCES_TEAL
 from components.help_widgets import info_tooltip, help_menu
@@ -96,7 +97,7 @@ def admin_home_view(page: ft.Page):
     # ── 1. Tarjeta Total ───────────────────────────────────────────────────────
     tarjeta_total = ft.Container(
         bgcolor=INCES_BLUE,
-        padding=ft.padding.Padding(left=30, top=25, right=30, bottom=25),
+        padding=Padding(left=30, top=25, right=30, bottom=25),
         border_radius=15,
         shadow=ft.BoxShadow(blur_radius=12, color=ft.Colors.BLACK26, offset=ft.Offset(0, 6)),
         clip_behavior=ft.ClipBehavior.NONE,
@@ -177,20 +178,20 @@ def admin_home_view(page: ft.Page):
         tooltip_msg="Cursos de formación con mayor número de participantes censados."
     )
 
-    # ── 4. Tarjeta de Cursos más Demandados (junto a los gráficos)
-    lista_cursos = [ft.Text("Cursos con Mayor Demanda", size=16, weight=ft.FontWeight.BOLD, color=INCES_BLUE), ft.Divider(height=10, color=ft.Colors.GREY_300)]
-    for curso, cantidad in stats.get("cursos", []):
-        lista_cursos.append(
+    # ── 4. Tarjeta de Perfiles más Demandados (junto a los gráficos)
+    lista_perfiles = [ft.Text("Perfiles con Mayor Demanda", size=16, weight=ft.FontWeight.BOLD, color=INCES_BLUE), ft.Divider(height=10, color=ft.Colors.GREY_300)]
+    for perfil, cantidad in stats.get("perfiles", []):
+        lista_perfiles.append(
             ft.Row([
                 ft.Icon(ft.Icons.MENU_BOOK, size=16, color=INCES_TEAL),
-                ft.Text(curso, size=14, weight=ft.FontWeight.W_500, expand=True),
+                ft.Text(perfil, size=14, weight=ft.FontWeight.W_500, expand=True),
                 ft.Container(content=ft.Text(str(cantidad), size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE), bgcolor=INCES_BLUE, padding=ft.Padding.symmetric(horizontal=8, vertical=4), border_radius=10)
             ])
         )
 
-    tarjeta_cursos = ft.Container(
+    tarjeta_perfiles = ft.Container(
         bgcolor=ft.Colors.WHITE, padding=20, border_radius=15, shadow=ft.BoxShadow(blur_radius=10, color=ft.Colors.BLACK12),
-        content=ft.Column(lista_cursos)
+        content=ft.Column(lista_perfiles)
     )
 
     # ── 5. Layout Final ────────────────────────────────────────────────────────

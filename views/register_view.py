@@ -1,5 +1,5 @@
 import flet as ft
-import hashlib
+import bcrypt
 from config.theme import INCES_TEAL, INCES_BLUE, PAGE_BG
 from components.header import create_header
 from database.db import create_user, count_users
@@ -77,7 +77,7 @@ def register_view(page: ft.Page, on_cancel_click):
             return
 
         # Todo OK — crear usuario
-        hashed_pw = hashlib.sha256(password_field.value.encode()).hexdigest()
+        hashed_pw = bcrypt.hashpw(password_field.value.encode(), bcrypt.gensalt()).decode()
         is_first = (count_users() == 0)
         role   = "ADMIN"    if is_first else "FORMADOR"
         status = "APPROVED" if is_first else "PENDING"

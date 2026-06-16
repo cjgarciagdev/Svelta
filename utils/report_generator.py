@@ -180,19 +180,21 @@ def generate_estudiantes_report(estudiantes: list, output_path: str | None = Non
     # ─── Todas las columnas del formulario ─────────────────────
     col_widths = {
         "#":               7,
-        "Cédula":         20,
-        "Nombres":        22,
-        "Apellidos":      22,
-        "Género":         10,
+        "Cédula":         19,
+        "Nombres":        20,
+        "Apellidos":      20,
+        "Género":          8,
         "Edad":            7,
-        "Nivel Acad.":    20,
-        "Discapacidad":   12,
-        "Teléfono":       18,
-        "Correo":         28,
-        "Dirección":      28,
-        "Perfil":         25,
+        "Nivel Acad.":    18,
+        "Discapacidad":   10,
+        "Tipo Discap.":   18,
+        "Teléfono":       16,
+        "Correo":         22,
+        "Dirección":      22,
+        "Entidad":        20,
+        "Perfil":         22,
         "Estado":         15,
-        "Fecha Censo":    18,
+        "Fecha Censo":    16,
     }
     col_keys = list(col_widths.keys())
     row_h = 6
@@ -224,10 +226,11 @@ def generate_estudiantes_report(estudiantes: list, output_path: str | None = Non
         pdf.set_text_color(*DARK_TEXT)
 
         estado = est.get("estado_inscripcion") or "CENSADO"
-        curso = est.get("perfil_nombre") or "Sin asignar"
+        perfil = est.get("perfil_nombre") or "Sin asignar"
 
         discap = est.get("posee_discapacidad")
         discap_str = "Sí" if discap and str(discap).lower() in ("1", "sí", "si", "yes", "true") else "No"
+        tipo_discap_str = safe(est.get("cual_discapacidad") or "", 16) if discap_str == "Sí" else ""
 
         cells = [
             (str(row_idx + 1), "#", "C"),
@@ -238,10 +241,12 @@ def generate_estudiantes_report(estudiantes: list, output_path: str | None = Non
             (str(est.get("edad") or ""), "Edad", "C"),
             (safe(est.get("nivel_academico"), 14), "Nivel Acad.", "L"),
             (discap_str, "Discapacidad", "C"),
+            (tipo_discap_str, "Tipo Discap.", "L"),
             (safe(est.get("telefono"), 12), "Teléfono", "C"),
             (safe(est.get("correo"), 18), "Correo", "L"),
             (safe(est.get("direccion"), 18), "Dirección", "L"),
-            (safe(curso, 16), "Perfil", "L"),
+            (safe(est.get("entidad"), 15), "Entidad", "L"),
+            (safe(perfil, 16), "Perfil", "L"),
         ]
 
         for text, key, align in cells:
@@ -410,8 +415,8 @@ def generate_estudiantes_xlsx_report(estudiantes: list, output_path: str | None 
     # ─── Todas las columnas ───────────────────────────────────
     headers = [
         "#", "Cédula", "Nombres", "Apellidos", "Género", "Edad",
-        "Nivel Académico", "Discapacidad", "Teléfono", "Correo",
-        "Dirección", "Perfil", "Estado", "Fecha Censo"
+        "Nivel Académico", "Discapacidad", "Tipo Discapacidad", "Teléfono", "Correo",
+        "Dirección", "Nombre de Entidad", "Perfil", "Estado", "Fecha Censo"
     ]
     num_cols = len(headers)
     last_col_letter = get_column_letter(num_cols)
@@ -510,9 +515,10 @@ def generate_estudiantes_xlsx_report(estudiantes: list, output_path: str | None 
             fill_color = row_colors[global_idx % 2]
 
             estado = est.get("estado_inscripcion") or "CENSADO"
-            curso = est.get("perfil_nombre") or "Sin asignar"
+            perfil = est.get("perfil_nombre") or "Sin asignar"
             discap = est.get("posee_discapacidad")
             discap_str = "Sí" if discap and str(discap).lower() in ("1", "sí", "si", "yes", "true") else "No"
+            tipo_discap_str = est.get("cual_discapacidad") or "" if discap_str == "Sí" else ""
 
             data = [
                 global_idx,
@@ -523,10 +529,12 @@ def generate_estudiantes_xlsx_report(estudiantes: list, output_path: str | None 
                 est.get("edad") or "",
                 est.get("nivel_academico") or "",
                 discap_str,
+                tipo_discap_str,
                 est.get("telefono") or "N/A",
                 est.get("correo") or "",
                 est.get("direccion") or "",
-                curso,
+                est.get("entidad") or "",
+                perfil,
                 estado,
                 est.get("fecha_censo") or "",
             ]
@@ -539,9 +547,9 @@ def generate_estudiantes_xlsx_report(estudiantes: list, output_path: str | None 
                     cell.font = font_data
                 else:
                     cell.font = font_data
-                if col_idx == 13:
+                if col_idx == 14:  # Estado
                     cell.font = Font(name="Segoe UI", size=10, bold=True, color=estado_colors.get(estado, "000000"))
-                cell.alignment = align_center if col_idx in (1, 2, 5, 6, 8, 9, 13, 14) else align_left
+                cell.alignment = align_center if col_idx in (1, 2, 5, 6, 8, 9, 14, 15) else align_left
 
             global_idx += 1
             curr_row += 1

@@ -1,4 +1,5 @@
 import flet as ft
+from flet import Border, BorderSide, Padding
 from config.theme import INCES_TEAL, INCES_BLUE, SIDEBAR_BG
 
 def create_sidebar(user, on_nav_change, on_logout, on_switch_view=None):
@@ -23,7 +24,7 @@ def create_sidebar(user, on_nav_change, on_logout, on_switch_view=None):
         width=250,
         bgcolor=SIDEBAR_BG,
         padding=20,
-        border=ft.border.Border.only(right=ft.border.BorderSide(1, ft.Colors.GREY_300)),
+        border=Border.only(right=BorderSide(1, ft.Colors.GREY_300)),
         content=ft.Column(
             expand=True,
             controls=[
@@ -46,7 +47,7 @@ def create_sidebar(user, on_nav_change, on_logout, on_switch_view=None):
                 # BOTONES DE NAVEGACIÓN
                 nav_button(ft.Icons.HOME, "Inicio", "inicio"),
                 nav_button(ft.Icons.PEOPLE_ALT, "Usuarios", "usuarios"),
-                nav_button(ft.Icons.LIBRARY_BOOKS, "Perfiles", "cursos"),
+                nav_button(ft.Icons.LIBRARY_BOOKS, "Perfiles", "perfiles"),
                 nav_button(ft.Icons.BADGE, "Censo CFS", "estudiantes"),
                 nav_button(ft.Icons.WORK, "Censo de Otros Ámbitos", "ambito"),
                 nav_button(ft.Icons.HELP_OUTLINE, "Manual Técnico", "manual"),

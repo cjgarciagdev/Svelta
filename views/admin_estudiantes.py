@@ -1,4 +1,5 @@
 import flet as ft
+from flet import Border, BorderSide, Padding
 from database.db import get_all_estudiantes, sync_google_forms, get_all_perfiles
 from config.theme import INCES_BLUE, INCES_TEAL
 from utils.report_generator import generate_estudiantes_report, generate_estudiantes_xlsx_report
@@ -11,7 +12,7 @@ import math
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwux_BKbkRt41oIiMOZaP_XpWf-VaFhbBIrTW-cQfzItisPH_Bs9PSYUuy1A_L5gnP1Tw/exec"
 SCRIPT_TOKEN = "inces_admin_2026"
 
-def admin_estudiantes_view(page: ft.Page):
+def admin_estudiantes_view(page: ft.Page, user=None):
     state = {
         "current_page": 1,
         "items_per_page": 8,
@@ -51,7 +52,7 @@ def admin_estudiantes_view(page: ft.Page):
         on_select=lambda e: handle_filter_change()
     )
 
-    curso_dropdown = ft.Dropdown(
+    perfil_dropdown = ft.Dropdown(
         options=[ft.dropdown.Option("TODOS")],
         value="TODOS",
         width=180,
@@ -63,22 +64,25 @@ def admin_estudiantes_view(page: ft.Page):
         on_select=lambda e: handle_filter_change()
     )
 
-    # Cargar cursos en el dropdown
+    # Cargar perfiles en el dropdown
     perfiles = get_all_perfiles()
     for p in perfiles:
-        curso_dropdown.options.append(ft.dropdown.Option(p["name"]))
+        perfil_dropdown.options.append(ft.dropdown.Option(p["name"]))
 
     # Tabla
     estudiantes_table = ft.DataTable(
         columns=[
+            ft.DataColumn(ft.Text("#", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
             ft.DataColumn(ft.Text("Cédula", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
             ft.DataColumn(ft.Text("Nombres y Apellidos", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
-            ft.DataColumn(ft.Text("Curso / Perfil", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
+            ft.DataColumn(ft.Text("Género", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
+            ft.DataColumn(ft.Text("Correo", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
+            ft.DataColumn(ft.Text("Perfil", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
             ft.DataColumn(ft.Text("Teléfono", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
             ft.DataColumn(ft.Text("Estado", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
         ],
         rows=[],
-        border=ft.border.Border.all(1, INCES_TEAL),
+        border=Border.all(1, INCES_TEAL),
         border_radius=10,
         heading_row_color=ft.Colors.with_opacity(0.1, INCES_TEAL),
         expand=True
@@ -121,19 +125,19 @@ def admin_estudiantes_view(page: ft.Page):
         
         query = (search_field.value or "").lower().strip()
         f_estado = estado_dropdown.value
-        f_curso = curso_dropdown.value
+        f_perfil = perfil_dropdown.value
 
         filtered = []
         for est in state["all_data"]:
             estado = est["estado_inscripcion"] or "CENSADO"
-            curso = est["perfil_nombre"] or "Sin asignar"
+            perfil = est["perfil_nombre"] or "Sin asignar"
             
             # Filtro Estado
             if f_estado != "TODOS" and estado != f_estado:
                 continue
             
-            # Filtro Curso
-            if f_curso != "TODOS" and curso != f_curso:
+            # Filtro Perfil
+            if f_perfil != "TODOS" and perfil != f_perfil:
                 continue
             
             # Filtro Búsqueda
@@ -168,7 +172,10 @@ def admin_estudiantes_view(page: ft.Page):
         if not page_data:
             estudiantes_table.rows.append(
                 ft.DataRow(cells=[
+                    ft.DataCell(ft.Text("-")),
                     ft.DataCell(ft.Text("Sin registros", color=ft.Colors.GREY_600)),
+                    ft.DataCell(ft.Text("-")),
+                    ft.DataCell(ft.Text("-")),
                     ft.DataCell(ft.Text("-")),
                     ft.DataCell(ft.Text("-")),
                     ft.DataCell(ft.Text("-")),
@@ -176,7 +183,8 @@ def admin_estudiantes_view(page: ft.Page):
                 ])
             )
         else:
-            for est in page_data:
+            for idx, est in enumerate(page_data):
+                num = (state["current_page"] - 1) * state["items_per_page"] + idx + 1
                 estado_val = est["estado_inscripcion"] or "CENSADO"
                 estado_color = INCES_TEAL if estado_val == 'INSCRITO' else ft.Colors.AMBER_700
                 if estado_val in ['RECHAZADO', 'RETIRADO']:
@@ -184,13 +192,16 @@ def admin_estudiantes_view(page: ft.Page):
                 elif estado_val == 'CULMINADO':
                     estado_color = ft.Colors.BLUE_700
                 
-                curso_nombre = est['perfil_nombre'] if est['perfil_nombre'] else "Sin asignar"
+                perfil_nombre = est['perfil_nombre'] if est['perfil_nombre'] else "Sin asignar"
                 
                 estudiantes_table.rows.append(
                     ft.DataRow(cells=[
+                        ft.DataCell(ft.Text(str(num), weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_600)),
                         ft.DataCell(ft.Text(str(est.get('cedula', '')))),
                         ft.DataCell(ft.Text(f"{est.get('nombres', '')} {est.get('apellidos', '')}")),
-                        ft.DataCell(ft.Text(curso_nombre)),
+                        ft.DataCell(ft.Text(est.get('genero', '') or "N/A")),
+                        ft.DataCell(ft.Text(est.get('correo', '') or "N/A")),
+                        ft.DataCell(ft.Text(perfil_nombre)),
                         ft.DataCell(ft.Text(est.get('telefono', '') or "N/A")),
                         ft.DataCell(ft.Text(estado_val, color=estado_color, weight=ft.FontWeight.BOLD)),
                     ])
@@ -206,8 +217,12 @@ def admin_estudiantes_view(page: ft.Page):
     def fetch_data():
         """Carga los datos de la base de datos a la tabla visual."""
         raw_data = get_all_estudiantes()
-        # Convertir a dict
-        state["all_data"] = [dict(r) if not isinstance(r, dict) else r for r in raw_data]
+        # Solo mostrar los que son CFS (excluir los de AMBITO)
+        state["all_data"] = [
+            dict(r) if not isinstance(r, dict) else r
+            for r in raw_data
+            if (dict(r) if not isinstance(r, dict) else r).get('tipo_origen', 'GENERAL') != 'AMBITO'
+        ]
         handle_filter_change()
 
     def handle_generate_xlsx_report(e, group_by_trimester=True):
@@ -288,11 +303,10 @@ def admin_estudiantes_view(page: ft.Page):
     # Botones principales
     sync_btn = ft.ElevatedButton("Refrescar Censo", icon=ft.Icons.SYNC, color=ft.Colors.WHITE, bgcolor=INCES_BLUE, on_click=handle_sync)
 
-    report_btn = ft.ElevatedButton("PDF Trim.", icon=ft.Icons.PICTURE_AS_PDF, color=ft.Colors.WHITE, bgcolor=INCES_TEAL, on_click=lambda e: handle_generate_report(e, True), style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), tooltip="PDF agrupado por trimestre")
-    report_xlsx_btn = ft.ElevatedButton("Excel Trim.", icon=ft.Icons.GRID_ON, color=ft.Colors.WHITE, bgcolor=ft.Colors.GREEN_700, on_click=lambda e: handle_generate_xlsx_report(e, True), style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), tooltip="Excel agrupado por trimestre")
+    report_btn = ft.ElevatedButton("PDF", icon=ft.Icons.PICTURE_AS_PDF, color=ft.Colors.WHITE, bgcolor=INCES_TEAL, on_click=lambda e: handle_generate_report(e, False), style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), tooltip="Generar PDF")
+    report_xlsx_btn = ft.ElevatedButton("Excel", icon=ft.Icons.GRID_ON, color=ft.Colors.WHITE, bgcolor=ft.Colors.GREEN_700, on_click=lambda e: handle_generate_xlsx_report(e, False), style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), tooltip="Generar Excel")
 
-    report_general_btn = ft.ElevatedButton("PDF General", icon=ft.Icons.PICTURE_AS_PDF, color=ft.Colors.WHITE, bgcolor=INCES_TEAL, on_click=lambda e: handle_generate_report(e, False), style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), tooltip="PDF general (todos los datos del formulario)")
-    report_xlsx_general_btn = ft.ElevatedButton("Excel General", icon=ft.Icons.GRID_ON, color=ft.Colors.WHITE, bgcolor=ft.Colors.GREEN_700, on_click=lambda e: handle_generate_xlsx_report(e, False), style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), tooltip="Excel general (todos los datos del formulario)")
+    is_super_admin = user and dict(user).get("was_formador", 0) == 0
 
     header = ft.Row(
         controls=[
@@ -308,8 +322,8 @@ def admin_estudiantes_view(page: ft.Page):
             ], spacing=6, vertical_alignment=ft.CrossAxisAlignment.CENTER),
             ft.Row([
                 last_sync_text, loading_ring, sync_btn,
-                report_btn, report_xlsx_btn,
-                report_general_btn, report_xlsx_general_btn
+                report_btn if is_super_admin else ft.Container(),
+                report_xlsx_btn if is_super_admin else ft.Container()
             ], alignment=ft.MainAxisAlignment.END, spacing=8)
         ],
         alignment=ft.MainAxisAlignment.SPACE_BETWEEN
@@ -320,8 +334,8 @@ def admin_estudiantes_view(page: ft.Page):
             search_field,
             ft.Text("Estado:", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700),
             estado_dropdown,
-            ft.Text("Curso:", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700),
-            curso_dropdown
+            ft.Text("Perfil:", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700),
+            perfil_dropdown
         ],
         spacing=15,
         vertical_alignment=ft.CrossAxisAlignment.CENTER

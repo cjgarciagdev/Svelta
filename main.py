@@ -10,7 +10,7 @@ def main(page: ft.Page):
     # Inicializar base de datos
     init_db()
 
-    page.title = "Inces - Portal de Censo e Inscripción"
+    page.title = "Inces - Censo Inces"
     page.window.width = 1000
     page.window.height = 700
     page.window.min_width = 800
@@ -79,4 +79,5 @@ def main(page: ft.Page):
     # Mostrar splash al iniciar
     show_splash()
 
-ft.run(main, assets_dir=".")
+ft.app(target=main, view=ft.AppView.WEB_BROWSER, port=8550, host="0.0.0.0", assets_dir="assets")
+# ft.run(main, assets_dir="assets")

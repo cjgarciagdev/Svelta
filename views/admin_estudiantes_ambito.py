@@ -1,4 +1,5 @@
 import flet as ft
+from flet import Border, BorderSide, Padding
 from database.db import get_all_estudiantes, sync_google_forms, get_all_perfiles
 from config.theme import INCES_BLUE, INCES_TEAL
 from utils.report_generator import generate_estudiantes_report, generate_estudiantes_xlsx_report
@@ -11,7 +12,7 @@ import math
 GOOGLE_SCRIPT_URL_AMBITO = "https://script.google.com/macros/s/AKfycbweM1zIrHOPvhSFNggExghoUHzRo9cUfkBr5CBO4cwl0i4PKWu6pxIwXABOnovEda4_/exec"
 SCRIPT_TOKEN_AMBITO = "inces_admin_2026"
 
-def admin_estudiantes_ambito_view(page: ft.Page):
+def admin_estudiantes_ambito_view(page: ft.Page, user=None):
     state = {
         "current_page": 1,
         "items_per_page": 8,
@@ -51,7 +52,7 @@ def admin_estudiantes_ambito_view(page: ft.Page):
         on_select=lambda e: handle_filter_change()
     )
 
-    curso_dropdown = ft.Dropdown(
+    perfil_dropdown = ft.Dropdown(
         options=[ft.dropdown.Option("TODOS")],
         value="TODOS",
         width=180,
@@ -63,10 +64,23 @@ def admin_estudiantes_ambito_view(page: ft.Page):
         on_select=lambda e: handle_filter_change()
     )
 
-    # Cargar cursos en el dropdown
+    # Cargar perfiles en el dropdown
     perfiles = get_all_perfiles()
     for p in perfiles:
-        curso_dropdown.options.append(ft.dropdown.Option(p["name"]))
+        perfil_dropdown.options.append(ft.dropdown.Option(p["name"]))
+
+    entidad_dropdown = ft.Dropdown(
+        options=[ft.dropdown.Option("TODAS")],
+        value="TODAS",
+        label="Entidad",
+        width=200,
+        height=40,
+        text_size=13,
+        border_radius=8,
+        border_color=ft.Colors.GREY_300,
+        focused_border_color=ft.Colors.PURPLE_600,
+        on_select=lambda e: handle_filter_change()
+    )
 
     # Tabla
     estudiantes_table = ft.DataTable(
@@ -76,12 +90,13 @@ def admin_estudiantes_ambito_view(page: ft.Page):
             ft.DataColumn(ft.Text("Nombres y Apellidos", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
             ft.DataColumn(ft.Text("Género", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
             ft.DataColumn(ft.Text("Correo", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
-            ft.DataColumn(ft.Text("Curso / Perfil", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
+            ft.DataColumn(ft.Text("Nombre de Entidad", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
+            ft.DataColumn(ft.Text("Perfil", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
             ft.DataColumn(ft.Text("Teléfono", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
             ft.DataColumn(ft.Text("Estado", weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87)),
         ],
         rows=[],
-        border=ft.border.Border.all(1, ft.Colors.PURPLE_200),
+        border=Border.all(1, ft.Colors.PURPLE_200),
         border_radius=10,
         heading_row_color=ft.Colors.PURPLE_50,
         expand=True
@@ -124,19 +139,25 @@ def admin_estudiantes_ambito_view(page: ft.Page):
         
         query = (search_field.value or "").lower().strip()
         f_estado = estado_dropdown.value
-        f_curso = curso_dropdown.value
+        f_perfil = perfil_dropdown.value
+        f_entidad = entidad_dropdown.value
 
         filtered = []
         for est in state["all_data"]:
             estado = est["estado_inscripcion"] or "CENSADO"
-            curso = est["perfil_nombre"] or "Sin asignar"
+            perfil = est["perfil_nombre"] or "Sin asignar"
+            entidad = est.get("entidad") or ""
             
             # Filtro Estado
             if f_estado != "TODOS" and estado != f_estado:
                 continue
             
-            # Filtro Curso
-            if f_curso != "TODOS" and curso != f_curso:
+            # Filtro Perfil
+            if f_perfil != "TODOS" and perfil != f_perfil:
+                continue
+            
+            # Filtro Entidad
+            if f_entidad != "TODAS" and entidad != f_entidad:
                 continue
             
             # Filtro Búsqueda
@@ -179,6 +200,7 @@ def admin_estudiantes_ambito_view(page: ft.Page):
                     ft.DataCell(ft.Text("-")),
                     ft.DataCell(ft.Text("-")),
                     ft.DataCell(ft.Text("-")),
+                    ft.DataCell(ft.Text("-")),
                 ])
             )
         else:
@@ -191,7 +213,7 @@ def admin_estudiantes_ambito_view(page: ft.Page):
                 elif estado_val == 'CULMINADO':
                     estado_color = ft.Colors.BLUE_700
                 
-                curso_nombre = est['perfil_nombre'] if est['perfil_nombre'] else "Sin asignar"
+                perfil_nombre = est['perfil_nombre'] if est['perfil_nombre'] else "Sin asignar"
                 
                 estudiantes_table.rows.append(
                     ft.DataRow(cells=[
@@ -200,7 +222,8 @@ def admin_estudiantes_ambito_view(page: ft.Page):
                         ft.DataCell(ft.Text(f"{est.get('nombres', '')} {est.get('apellidos', '')}")),
                         ft.DataCell(ft.Text(est.get('genero', '') or "N/A")),
                         ft.DataCell(ft.Text(est.get('correo', '') or "N/A")),
-                        ft.DataCell(ft.Text(curso_nombre)),
+                        ft.DataCell(ft.Text(est.get('entidad', '') or "N/A")),
+                        ft.DataCell(ft.Text(perfil_nombre)),
                         ft.DataCell(ft.Text(est.get('telefono', '') or "N/A")),
                         ft.DataCell(ft.Text(estado_val, color=estado_color, weight=ft.FontWeight.BOLD)),
                     ])
@@ -218,6 +241,13 @@ def admin_estudiantes_ambito_view(page: ft.Page):
         raw_data = get_all_estudiantes()
         # Solo cargar los que son de AMBITO
         state["all_data"] = [dict(r) for r in raw_data if dict(r).get('tipo_origen', 'GENERAL') == 'AMBITO']
+        
+        # Actualizar el dropdown de entidades con los valores reales
+        entidades = sorted({est.get("entidad") or "" for est in state["all_data"] if est.get("entidad")})
+        entidad_dropdown.options = [ft.dropdown.Option("TODAS")] + [ft.dropdown.Option(e) for e in entidades]
+        if entidad_dropdown.value not in (["TODAS"] + entidades):
+            entidad_dropdown.value = "TODAS"
+        
         handle_filter_change()
 
     def handle_generate_xlsx_report(e):
@@ -301,6 +331,8 @@ def admin_estudiantes_ambito_view(page: ft.Page):
     report_btn = ft.ElevatedButton("PDF", icon=ft.Icons.PICTURE_AS_PDF, color=ft.Colors.WHITE, bgcolor=INCES_TEAL, on_click=handle_generate_report, style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)))
     report_xlsx_btn = ft.ElevatedButton("Excel", icon=ft.Icons.GRID_ON, color=ft.Colors.WHITE, bgcolor=ft.Colors.GREEN_700, on_click=handle_generate_xlsx_report, style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)))
 
+    is_super_admin = user and dict(user).get("was_formador", 0) == 0
+
     header = ft.Row(
         controls=[
             ft.Row([
@@ -314,7 +346,9 @@ def admin_estudiantes_ambito_view(page: ft.Page):
                 ),
             ], spacing=6, vertical_alignment=ft.CrossAxisAlignment.CENTER),
             ft.Row([
-                last_sync_text, loading_ring, sync_btn, report_btn, report_xlsx_btn
+                last_sync_text, loading_ring, sync_btn, 
+                report_btn if is_super_admin else ft.Container(), 
+                report_xlsx_btn if is_super_admin else ft.Container()
             ], alignment=ft.MainAxisAlignment.END, spacing=8)
         ],
         alignment=ft.MainAxisAlignment.SPACE_BETWEEN
@@ -325,8 +359,10 @@ def admin_estudiantes_ambito_view(page: ft.Page):
             search_field,
             ft.Text("Estado:", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700),
             estado_dropdown,
-            ft.Text("Curso:", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700),
-            curso_dropdown
+            ft.Text("Perfil:", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700),
+            perfil_dropdown,
+            ft.Text("Entidad:", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700),
+            entidad_dropdown
         ],
         spacing=15,
         vertical_alignment=ft.CrossAxisAlignment.CENTER

@@ -1,8 +1,10 @@
 import flet as ft
 import hashlib
+import bcrypt
+import secrets
 from config.theme import INCES_TEAL, INCES_BLUE, LIGHT_BLUE_BG, LIGHT_BLUE_BORDER, TEXT_BLUE
 from components.header import create_header
-from database.db import get_user_by_email
+from database.db import get_user_by_email, update_user_password
 import time
 
 def login_view(page: ft.Page, on_register_click, on_login_success):
@@ -29,9 +31,20 @@ def login_view(page: ft.Page, on_register_click, on_login_success):
             page.update()
             return
             
-        hashed_pw = hashlib.sha256(password_field.value.encode()).hexdigest()
+        hashed_pw_attempt = password_field.value.encode()
+        stored_hash = user["password_hash"]
         
-        if user["password_hash"] != hashed_pw:
+        is_valid = False
+        if stored_hash.startswith("$2b$"):
+            is_valid = bcrypt.checkpw(hashed_pw_attempt, stored_hash.encode())
+        else:
+            is_valid = (stored_hash == hashlib.sha256(hashed_pw_attempt).hexdigest())
+            if is_valid:
+                # Migración silenciosa
+                new_bcrypt_hash = bcrypt.hashpw(hashed_pw_attempt, bcrypt.gensalt()).decode()
+                update_user_password(user["id"], new_bcrypt_hash)
+        
+        if not is_valid:
             error_text.value = "Contraseña incorrecta."
             error_text.visible = True
             page.update()
@@ -60,6 +73,113 @@ def login_view(page: ft.Page, on_register_click, on_login_success):
         time.sleep(1)
         on_login_success(user)
 
+    def open_recovery_dialog(e):
+        state = {"email": "", "code": "", "step": 1}
+        
+        email_rec_field = ft.TextField(label="Correo Electrónico", text_size=13, width=320)
+        code_rec_field = ft.TextField(label="Código de 6 dígitos", text_size=13, width=320, visible=False)
+        new_pw_rec_field = ft.TextField(label="Nueva Contraseña", password=True, can_reveal_password=True, text_size=13, width=320, visible=False)
+        err_rec = ft.Text("", color=ft.Colors.RED_600, size=12, visible=False)
+        instrucciones_text = ft.Text("Ingresa tu correo registrado para enviarte un código.", size=13)
+        btn_action = ft.ElevatedButton("Enviar Código", bgcolor=INCES_TEAL, color=ft.Colors.WHITE, width=180)
+
+        def close_dlg(e):
+            dialog.open = False
+            page.update()
+
+        def handle_action(e):
+            err_rec.visible = False
+            page.update()
+            
+            if state["step"] == 1:
+                if not email_rec_field.value:
+                    err_rec.value = "Ingresa tu correo."
+                    err_rec.visible = True
+                    page.update()
+                    return
+                user = get_user_by_email(email_rec_field.value)
+                if not user:
+                    err_rec.value = "No hay ningún usuario con ese correo."
+                    err_rec.visible = True
+                    page.update()
+                    return
+                
+                state["email"] = email_rec_field.value
+                state["code"] = "".join(str(secrets.choice(range(10))) for _ in range(6))
+                
+                btn_action.disabled = True
+                btn_action.text = "Enviando..."
+                page.update()
+                
+                from utils.email_sender import send_recovery_code
+                enviado = send_recovery_code(state["email"], state["code"])
+                
+                btn_action.disabled = False
+                if enviado:
+                    state["step"] = 2
+                    instrucciones_text.value = f"Hemos enviado un código a {state['email']}. Revisa tu correo."
+                    email_rec_field.visible = False
+                    code_rec_field.visible = True
+                    btn_action.text = "Verificar Código"
+                else:
+                    btn_action.text = "Enviar Código"
+                    err_rec.value = "Error al enviar correo. Verifica la configuración."
+                    err_rec.visible = True
+                page.update()
+                
+            elif state["step"] == 2:
+                if code_rec_field.value.strip() != state["code"]:
+                    err_rec.value = "Código incorrecto. Intenta de nuevo."
+                    err_rec.visible = True
+                    page.update()
+                    return
+                
+                state["step"] = 3
+                instrucciones_text.value = "✅ Código verificado. Ahora escribe tu nueva contraseña."
+                code_rec_field.visible = False
+                new_pw_rec_field.visible = True
+                btn_action.text = "Guardar Contraseña"
+                page.update()
+                
+            elif state["step"] == 3:
+                if len(new_pw_rec_field.value) < 6:
+                    err_rec.value = "La contraseña debe tener al menos 6 caracteres."
+                    err_rec.visible = True
+                    page.update()
+                    return
+                    
+                user = get_user_by_email(state["email"])
+                hashed_pw = bcrypt.hashpw(new_pw_rec_field.value.encode(), bcrypt.gensalt()).decode()
+                update_user_password(user["id"], hashed_pw)
+                
+                dialog.open = False
+                page.snack_bar = ft.SnackBar(ft.Text("¡Contraseña actualizada con éxito! Ya puedes iniciar sesión."), bgcolor=ft.Colors.GREEN_700)
+                page.snack_bar.open = True
+                page.update()
+
+        btn_action.on_click = handle_action
+
+        dialog = ft.AlertDialog(
+            title=ft.Text("Recuperar Contraseña", size=18, weight=ft.FontWeight.BOLD),
+            content=ft.Column([
+                instrucciones_text,
+                email_rec_field,
+                code_rec_field,
+                new_pw_rec_field,
+                err_rec,
+                ft.Container(height=5),
+                ft.Row([
+                    ft.TextButton("Cancelar", on_click=close_dlg),
+                    btn_action
+                ], alignment=ft.MainAxisAlignment.END)
+            ], tight=True, spacing=10, width=340),
+            actions=[],
+            actions_padding=ft.Padding(0, 0, 0, 0)
+        )
+        page.overlay.append(dialog)
+        dialog.open = True
+        page.update()
+
     return ft.Column(
         expand=True,
         spacing=0,
@@ -78,7 +198,7 @@ def login_view(page: ft.Page, on_register_click, on_login_success):
                                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                                 spacing=20,
                                 controls=[
-                                    ft.Text("Portal Control de Censados", size=28, weight=ft.FontWeight.BOLD, color=INCES_BLUE),
+                                    ft.Text("Censo Inces", size=28, weight=ft.FontWeight.BOLD, color=INCES_BLUE),
                                     ft.Container(
                                         width=500,
                                         bgcolor=ft.Colors.WHITE,
@@ -101,6 +221,11 @@ def login_view(page: ft.Page, on_register_click, on_login_success):
                                                     height=45,
                                                     style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=25), text_style=ft.TextStyle(size=15, weight=ft.FontWeight.BOLD)),
                                                     on_click=handle_login
+                                                ),
+                                                ft.TextButton(
+                                                    "¿Olvidaste tu contraseña?", 
+                                                    style=ft.ButtonStyle(color=ft.Colors.BLUE_600),
+                                                    on_click=open_recovery_dialog
                                                 ),
                                                 ft.Text("¿Aún no eres formador?", color=ft.Colors.GREY_600, size=14),
                                                 ft.OutlinedButton(
