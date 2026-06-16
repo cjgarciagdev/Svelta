@@ -2,6 +2,7 @@ import flet as ft
 from database.db import get_all_estudiantes, sync_google_forms, get_all_perfiles
 from config.theme import INCES_BLUE, INCES_TEAL
 from utils.report_generator import generate_estudiantes_report, generate_estudiantes_xlsx_report
+from components.help_button import create_help_button
 import time
 import threading
 import os
@@ -295,7 +296,16 @@ def admin_estudiantes_view(page: ft.Page):
 
     header = ft.Row(
         controls=[
-            ft.Text("Estudiantes Censados", size=24, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87),
+            ft.Row([
+                ft.Text("Estudiantes Censados", size=24, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87),
+                create_help_button(page, "Censo CFS",
+                    "Gestiona el censo principal de participantes.\n\n"
+                    "• Filtra por cédula, nombre, apellido, estado o curso.\n"
+                    "• Exporta reportes en PDF o Excel (generales o por trimestre).\n"
+                    "• Usa 'Refrescar Censo' para sincronizar datos desde Google Forms.\n"
+                    "• Los datos se actualizan automáticamente al iniciar la vista."
+                ),
+            ], spacing=6, vertical_alignment=ft.CrossAxisAlignment.CENTER),
             ft.Row([
                 last_sync_text, loading_ring, sync_btn,
                 report_btn, report_xlsx_btn,

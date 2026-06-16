@@ -1,6 +1,7 @@
 import flet as ft
 from database.db import get_all_users, update_user_status, update_user_role, delete_user, get_all_perfiles, assign_perfil_to_formador, remove_perfil_from_formador, get_perfiles_by_formador, get_entidades_disponibles
 from config.theme import INCES_TEAL, INCES_BLUE
+from components.help_button import create_help_button
 
 def admin_users_view(page: ft.Page, current_user):
     """Vista de Gestión de Usuarios (Aprobación de Formadores)."""
@@ -313,6 +314,14 @@ def admin_users_view(page: ft.Page, current_user):
             ft.Row([
                 ft.Icon(ft.Icons.PEOPLE_ALT, color=INCES_TEAL, size=30),
                 ft.Text("Gestión de Formadores", size=24, weight=ft.FontWeight.BOLD, color=INCES_BLUE),
+                create_help_button(page, "Gestión de Formadores",
+                    "Administra los usuarios del sistema.\n\n"
+                    "• Aprueba o rechaza solicitudes de registro de formadores.\n"
+                    "• Asigna cursos (perfiles) a cada formador.\n"
+                    "• Cambia roles entre Formador y Administrador.\n"
+                    "• Elimina usuarios del sistema.\n\n"
+                    "Solo el administrador principal (ID 1) puede ascender usuarios a Administrador."
+                ),
             ]),
             ft.Text("Aprueba o rechaza a los formadores que se han registrado en el sistema.", color=ft.Colors.GREY_600),
             ft.Divider(height=30, color=ft.Colors.GREY_300),

@@ -5,6 +5,7 @@ from views.admin_cursos import admin_cursos_view
 from views.admin_estudiantes import admin_estudiantes_view
 from views.admin_estudiantes_ambito import admin_estudiantes_ambito_view
 from views.admin_home import admin_home_view
+from views.manual_view import manual_view
 
 
 
@@ -34,6 +35,8 @@ def admin_dashboard_view(page: ft.Page, user, on_logout):
             content_area.content = admin_estudiantes_view(page)
         elif view_name == "ambito":
             content_area.content = admin_estudiantes_ambito_view(page)
+        elif view_name == "manual":
+            content_area.content.controls.append(manual_view(page))
             
         content_area.update()
 

@@ -1,6 +1,7 @@
 import flet as ft
 from database.db import get_all_perfiles, create_perfil, toggle_perfil_status
 from config.theme import INCES_TEAL, INCES_BLUE
+from components.help_button import create_help_button
 
 def admin_cursos_view(page: ft.Page):
     """Vista de Gestión de Perfiles (Cursos)."""
@@ -93,6 +94,13 @@ def admin_cursos_view(page: ft.Page):
             ft.Row([
                 ft.Icon(ft.Icons.LIBRARY_BOOKS, color=INCES_TEAL, size=30),
                 ft.Text("Gestión de Perfiles", size=24, weight=ft.FontWeight.BOLD, color=INCES_BLUE),
+                create_help_button(page, "Gestión de Perfiles",
+                    "Crea y administra los perfiles (cursos) que ofrece el INCES.\n\n"
+                    "• Escribe el nombre del nuevo perfil y haz clic en 'Crear Perfil'.\n"
+                    "• Cada perfil se muestra como una tarjeta con su estado actual.\n"
+                    "• Usa ⏸ para desactivar o ▶ para reactivar un perfil.\n"
+                    "• Los perfiles inactivos no estarán disponibles en otros módulos."
+                ),
             ]),
             ft.Text("Crea y administra los perfiles (cursos) que ofrece el INCES.", color=ft.Colors.GREY_600),
             ft.Divider(height=20, color=ft.Colors.GREY_300),

@@ -49,6 +49,7 @@ def create_sidebar(user, on_nav_change, on_logout, on_switch_view=None):
                 nav_button(ft.Icons.LIBRARY_BOOKS, "Perfiles", "cursos"),
                 nav_button(ft.Icons.BADGE, "Censo CFS", "estudiantes"),
                 nav_button(ft.Icons.WORK, "Censo de Otros Ámbitos", "ambito"),
+                nav_button(ft.Icons.HELP_OUTLINE, "Manual Técnico", "manual"),
                 
                 # ESPACIO FLEXIBLE PARA EMPUJAR EL BOTÓN DE SALIR ABAJO
                 ft.Container(expand=True),

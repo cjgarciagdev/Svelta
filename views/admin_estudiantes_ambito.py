@@ -2,6 +2,7 @@ import flet as ft
 from database.db import get_all_estudiantes, sync_google_forms, get_all_perfiles
 from config.theme import INCES_BLUE, INCES_TEAL
 from utils.report_generator import generate_estudiantes_report, generate_estudiantes_xlsx_report
+from components.help_button import create_help_button
 import time
 import threading
 import os
@@ -302,7 +303,16 @@ def admin_estudiantes_ambito_view(page: ft.Page):
 
     header = ft.Row(
         controls=[
-            ft.Text("Censo de Otros Ámbitos", size=24, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87),
+            ft.Row([
+                ft.Text("Censo de Otros Ámbitos", size=24, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87),
+                create_help_button(page, "Censo de Otros Ámbitos",
+                    "Gestiona el censo de participantes de otros ámbitos.\n\n"
+                    "• Filtra por cédula, nombre, estado o curso.\n"
+                    "• Exporta reportes en PDF o Excel.\n"
+                    "• Usa 'Refrescar Ámbito' para sincronizar datos desde Google Forms.\n"
+                    "• Datos filtrados automáticamente del formulario de Otros Ámbitos."
+                ),
+            ], spacing=6, vertical_alignment=ft.CrossAxisAlignment.CENTER),
             ft.Row([
                 last_sync_text, loading_ring, sync_btn, report_btn, report_xlsx_btn
             ], alignment=ft.MainAxisAlignment.END, spacing=8)

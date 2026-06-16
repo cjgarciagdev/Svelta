@@ -1,6 +1,8 @@
 import flet as ft
 from database.db import get_stats
 from config.theme import INCES_BLUE, INCES_TEAL
+from components.help_widgets import info_tooltip, help_menu
+from components.help_button import create_help_button
 
 
 # ─── Colores para las barras ───────────────────────────────────────────────────
@@ -14,18 +16,25 @@ _COLORES_PERFILES = [
 
 
 # ─── Helper para Gráficos de Barras (ProgressBars) ─────────────────────────────
-def _build_bar_chart(titulo: str, total: int, datos: list, paleta_colores: list) -> ft.Container:
+def _build_bar_chart(titulo: str, total: int, datos: list, paleta_colores: list, tooltip_msg: str = "") -> ft.Container:
     """
     Construye una tarjeta con un título y múltiples barras de progreso.
     datos: lista de tuplas (etiqueta, cantidad)
+    tooltip_msg: texto opcional para el ícono ⓘ de información.
     """
-    elementos = [
-        ft.Text(titulo, size=16, weight=ft.FontWeight.BOLD, color=INCES_BLUE),
-        ft.Divider(height=10, color=ft.Colors.TRANSPARENT)
-    ]
+    titulo_row = ft.Row(
+        [
+            ft.Text(titulo, size=16, weight=ft.FontWeight.BOLD, color=INCES_BLUE),
+            info_tooltip(tooltip_msg) if tooltip_msg else ft.Container(),
+        ],
+        spacing=6,
+        vertical_alignment=ft.CrossAxisAlignment.CENTER,
+    )
+    
+    bar_elementos = []
     
     if not datos or total == 0:
-        elementos.append(ft.Text("Sin datos registrados", color=ft.Colors.GREY_500, italic=True))
+        bar_elementos.append(ft.Text("Sin datos registrados", color=ft.Colors.GREY_500, italic=True))
     else:
         for i, (etiqueta, cantidad) in enumerate(datos):
             # Calcular porcentaje
@@ -37,7 +46,7 @@ def _build_bar_chart(titulo: str, total: int, datos: list, paleta_colores: list)
             if len(etiq_texto) > 30:
                 etiq_texto = etiq_texto[:27] + "..."
                 
-            elementos.append(
+            bar_elementos.append(
                 ft.Column([
                     ft.Row(
                         [
@@ -55,14 +64,27 @@ def _build_bar_chart(titulo: str, total: int, datos: list, paleta_colores: list)
                     )
                 ], spacing=2)
             )
-            elementos.append(ft.Container(height=8)) # Espaciado entre barras
+            bar_elementos.append(ft.Container(height=8)) # Espaciado entre barras
             
     return ft.Container(
         bgcolor=ft.Colors.WHITE,
         padding=20,
         border_radius=15,
         shadow=ft.BoxShadow(blur_radius=10, color=ft.Colors.BLACK12, offset=ft.Offset(0, 4)),
-        content=ft.Column(elementos, alignment=ft.MainAxisAlignment.START, scroll=ft.ScrollMode.AUTO)
+        clip_behavior=ft.ClipBehavior.NONE,
+        content=ft.Column(
+            [
+                titulo_row,
+                ft.Divider(height=10, color=ft.Colors.TRANSPARENT),
+                ft.Column(
+                    bar_elementos,
+                    alignment=ft.MainAxisAlignment.START,
+                    scroll=ft.ScrollMode.AUTO,
+                    expand=True
+                )
+            ],
+            alignment=ft.MainAxisAlignment.START,
+        )
     )
 
 
@@ -77,11 +99,19 @@ def admin_home_view(page: ft.Page):
         padding=ft.padding.Padding(left=30, top=25, right=30, bottom=25),
         border_radius=15,
         shadow=ft.BoxShadow(blur_radius=12, color=ft.Colors.BLACK26, offset=ft.Offset(0, 6)),
+        clip_behavior=ft.ClipBehavior.NONE,
         content=ft.Row(
             [
                 ft.Column(
                     [
-                        ft.Text("Total de Estudiantes Censados", size=16, color=ft.Colors.WHITE70, weight=ft.FontWeight.BOLD),
+                        ft.Row(
+                            [
+                                ft.Text("Total de Estudiantes Censados", size=16, color=ft.Colors.WHITE70, weight=ft.FontWeight.BOLD),
+                                info_tooltip("Número total de registros confirmados hasta la fecha. Ver criterios de censo."),
+                            ],
+                            spacing=6,
+                            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                        ),
                         ft.Text(str(total_estudiantes), size=56, color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD),
                     ],
                     expand=True,
@@ -130,10 +160,22 @@ def admin_home_view(page: ft.Page):
     datos_perfiles = [(p, c) for p, c in stats.get("perfiles_todos", []) if c > 0]
 
     # ── 3. Construir Gráficos ──────────────────────────────────────────────────
-    grafico_genero = _build_bar_chart("Distribución por Género", total_estudiantes, datos_genero, _COLORES_GENERO)
-    grafico_disc = _build_bar_chart("Condición de Discapacidad", total_estudiantes, datos_disc, _COLORES_DISC)
-    grafico_trim = _build_bar_chart("Censados por Trimestre", total_estudiantes, datos_trimestres, _COLORES_TRIM)
-    grafico_perfiles = _build_bar_chart("Perfiles Totales Censados", total_estudiantes, datos_perfiles, _COLORES_PERFILES)
+    grafico_genero = _build_bar_chart(
+        "Distribución por Género", total_estudiantes, datos_genero, _COLORES_GENERO,
+        tooltip_msg="Distribución de participantes censados según el género registrado en el formulario."
+    )
+    grafico_disc = _build_bar_chart(
+        "Condición de Discapacidad", total_estudiantes, datos_disc, _COLORES_DISC,
+        tooltip_msg="Participantes con o sin condición de discapacidad declarada."
+    )
+    grafico_trim = _build_bar_chart(
+        "Censados por Trimestre", total_estudiantes, datos_trimestres, _COLORES_TRIM,
+        tooltip_msg="Total de participantes agrupados por el trimestre activo de su inscripción."
+    )
+    grafico_perfiles = _build_bar_chart(
+        "Perfiles Totales Censados", total_estudiantes, datos_perfiles, _COLORES_PERFILES,
+        tooltip_msg="Cursos de formación con mayor número de participantes censados."
+    )
 
     # ── 4. Tarjeta de Cursos más Demandados (junto a los gráficos)
     lista_cursos = [ft.Text("Cursos con Mayor Demanda", size=16, weight=ft.FontWeight.BOLD, color=INCES_BLUE), ft.Divider(height=10, color=ft.Colors.GREY_300)]
@@ -157,7 +199,18 @@ def admin_home_view(page: ft.Page):
         padding=20,
         content=ft.Column(
             [
-                ft.Text("Dashboard de Estadísticas", size=28, weight=ft.FontWeight.BOLD, color=INCES_BLUE),
+                ft.Row([
+                    ft.Text("Dashboard de Estadísticas", size=28, weight=ft.FontWeight.BOLD, color=INCES_BLUE),
+                    create_help_button(page, "Dashboard de Estadísticas",
+                        "Panel principal con estadísticas generales del sistema.\n\n"
+                        "Muestra el total de estudiantes censados, distribución por género, "
+                        "condición de discapacidad, censados por trimestre, perfiles más demandados "
+                        "y cursos con mayor cantidad de participantes.\n\n"
+                        "Los datos se actualizan automáticamente al sincronizar con Google Forms."
+                    ),
+                    ft.Container(expand=True),
+                    help_menu(page),
+                ], spacing=8, vertical_alignment=ft.CrossAxisAlignment.CENTER, expand=True),
                 ft.Divider(height=10, color=ft.Colors.TRANSPARENT),
 
                 # Fila 1 — Total de censados
