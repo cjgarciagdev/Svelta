@@ -23,20 +23,18 @@ def admin_dashboard_view(page: ft.Page, user, on_logout):
 
     # Función mágica que se activa cuando haces clic en un botón del Sidebar
     def handle_nav_change(view_name):
-        content_area.content.controls.clear()
-        
         if view_name == "inicio":
-            content_area.content.controls.append(admin_home_view(page))
+            content_area.content = admin_home_view(page)
         elif view_name == "usuarios":
-            content_area.content.controls.append(admin_users_view(page, user))
+            content_area.content = admin_users_view(page, user)
         elif view_name == "perfiles":
-            content_area.content.controls.append(admin_perfiles_view(page))
+            content_area.content = admin_perfiles_view(page)
         elif view_name == "estudiantes":
             content_area.content = admin_estudiantes_view(page, user)
         elif view_name == "ambito":
             content_area.content = admin_estudiantes_ambito_view(page, user)
         elif view_name == "manual":
-            content_area.content.controls.append(manual_view(page))
+            content_area.content = manual_view(page)
             
         content_area.update()
 
