@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Name=Sistema INCES
+Comment=Iniciar servidor del Censo INCES
+Exec=bash -c 'cd "$(dirname "%k")" && ./start_inces.sh'
+Icon=utilities-terminal
+Terminal=true
+Type=Application
+Categories=Application;
