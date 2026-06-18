@@ -88,8 +88,7 @@ def admin_perfiles_view(page: ft.Page):
                 ft.Icon(ft.Icons.LIBRARY_BOOKS, color=INCES_TEAL, size=30),
                 ft.Text("Gestión de Perfiles", size=24, weight=ft.FontWeight.BOLD, color=INCES_BLUE),
                 create_help_button(page, "Gestión de Perfiles",
-                    "Crea y administra los perfiles (cursos) que ofrece el INCES.\n\n"
-                    "• Escribe el nombre del nuevo perfil y haz clic en 'Crear Perfil'.\n"
+                    "Administra los perfiles que ofrece el Inces.\n\n"
                     "• Cada perfil se muestra como una tarjeta con su estado actual.\n"
                     "• Usa ⏸ para desactivar o ▶ para reactivar un perfil.\n"
                     "• Los perfiles inactivos no estarán disponibles en otros módulos."

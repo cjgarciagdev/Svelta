@@ -90,15 +90,15 @@ def formador_dashboard_view(page: ft.Page, user, on_logout):
                         ft.Text("Mis Estudiantes", size=28, weight=ft.FontWeight.BOLD, color=INCES_BLUE),
                         create_help_button(page, "Mis Estudiantes",
                             "Panel principal del formador.\n\n"
-                            "• Selecciona un curso del menú desplegable para ver sus estudiantes.\n"
+                            "• Selecciona un perfil del menú desplegable para ver sus estudiantes.\n"
                             "• Cambia el estado de inscripción de cada estudiante.\n"
                             "• Los estados disponibles: Censado, Inscrito, Culminado, Retirado.\n"
                             "• Usa la paginación para navegar entre páginas de estudiantes."
                         ),
                     ], spacing=6, vertical_alignment=ft.CrossAxisAlignment.CENTER),
                     ft.Row([
-                        ft.Text(f"Total en este curso: {len(state['estudiantes_filtrados'])}", size=14, color=ft.Colors.GREY_600),
-                        info_tooltip("Número de estudiantes asignados al curso seleccionado. Cambia el curso con el menú desplegable."),
+                        ft.Text(f"Total en este perfil: {len(state['estudiantes_filtrados'])}", size=14, color=ft.Colors.GREY_600),
+                        info_tooltip("Número de estudiantes asignados al perfil seleccionado. Cambia el perfil con el menú desplegable."),
                     ], spacing=4, vertical_alignment=ft.CrossAxisAlignment.CENTER),
                 ], spacing=4),
                 ft.Container(expand=True),
@@ -258,11 +258,6 @@ def formador_dashboard_view(page: ft.Page, user, on_logout):
                 content=ft.Row([ft.Icon(ft.Icons.HOME, color=ft.Colors.BLACK54, size=20), ft.Text("Mis Estudiantes", size=14, weight=ft.FontWeight.W_500)]),
                 padding=Padding.symmetric(vertical=12, horizontal=15), border_radius=8, ink=True,
                 on_click=lambda _: load_dashboard()
-            ),
-            ft.Container(
-                content=ft.Row([ft.Icon(ft.Icons.HELP_OUTLINE, color=ft.Colors.BLACK54, size=20), ft.Text("Manual Técnico", size=14, weight=ft.FontWeight.W_500)]),
-                padding=Padding.symmetric(vertical=12, horizontal=15), border_radius=8, ink=True,
-                on_click=lambda _: show_manual()
             ),
             ft.Container(expand=True),
             

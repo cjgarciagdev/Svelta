@@ -306,24 +306,21 @@ def admin_estudiantes_view(page: ft.Page, user=None):
     report_btn = ft.ElevatedButton("PDF", icon=ft.Icons.PICTURE_AS_PDF, color=ft.Colors.WHITE, bgcolor=INCES_TEAL, on_click=lambda e: handle_generate_report(e, False), style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), tooltip="Generar PDF")
     report_xlsx_btn = ft.ElevatedButton("Excel", icon=ft.Icons.GRID_ON, color=ft.Colors.WHITE, bgcolor=ft.Colors.GREEN_700, on_click=lambda e: handle_generate_xlsx_report(e, False), style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), tooltip="Generar Excel")
 
-    is_super_admin = user and dict(user).get("was_formador", 0) == 0
-
     header = ft.Row(
         controls=[
             ft.Row([
                 ft.Text("Estudiantes Censados", size=24, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87),
                 create_help_button(page, "Censo CFS",
                     "Gestiona el censo principal de participantes.\n\n"
-                    "• Filtra por cédula, nombre, apellido, estado o curso.\n"
-                    "• Exporta reportes en PDF o Excel (generales o por trimestre).\n"
+                    "• Filtra por cédula, nombre, apellido, estado o perfil.\n"
+                    "• Exporta reportes en PDF o Excel.\n"
                     "• Usa 'Refrescar Censo' para sincronizar datos desde Google Forms.\n"
                     "• Los datos se actualizan automáticamente al iniciar la vista."
                 ),
             ], spacing=6, vertical_alignment=ft.CrossAxisAlignment.CENTER),
             ft.Row([
                 last_sync_text, loading_ring, sync_btn,
-                report_btn if is_super_admin else ft.Container(),
-                report_xlsx_btn if is_super_admin else ft.Container()
+                report_btn, report_xlsx_btn
             ], alignment=ft.MainAxisAlignment.END, spacing=8)
         ],
         alignment=ft.MainAxisAlignment.SPACE_BETWEEN

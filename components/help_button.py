@@ -4,82 +4,31 @@ import threading
 
 
 def create_help_button(page: ft.Page, title: str, help_text: str):
-    """Botón circular '!' con popup flotante activado por clic."""
-    popup = ft.Container(
-        content=ft.Column(
-            [
-                ft.Text(title, weight=ft.FontWeight.BOLD, color=INCES_TEAL, size=13),
-                ft.Divider(height=4, color=ft.Colors.TRANSPARENT),
-                ft.Text(help_text, size=12, color="#333333"),
-            ],
-            spacing=4,
-            height=200,
-            scroll=ft.ScrollMode.AUTO,
+    """Botón circular '!' que abre un diálogo de ayuda sobre todo el sistema."""
+    
+    def close_dlg(e):
+        dialog.open = False
+        page.update()
+
+    dialog = ft.AlertDialog(
+        title=ft.Text(title, weight=ft.FontWeight.BOLD, color=INCES_TEAL, size=16),
+        content=ft.Container(
+            content=ft.Text(help_text, size=13, color=ft.Colors.BLACK87),
+            width=350,
+            padding=10
         ),
-        bgcolor=ft.Colors.WHITE,
-        border=ft.border.Border.all(1, "#E0E0E0"),
-        border_radius=8,
-        padding=14,
-        width=280,
-        shadow=ft.BoxShadow(
-            blur_radius=12,
-            color="#26000000",
-            offset=ft.Offset(0, 4),
-        ),
-        visible=False,
-        opacity=0,
-        animate_opacity=150,
-        top=36,
-        left=0,
+        actions=[
+            ft.TextButton("Entendido", on_click=close_dlg)
+        ],
+        actions_alignment=ft.MainAxisAlignment.END,
+        shape=ft.RoundedRectangleBorder(radius=8),
     )
 
-    is_open = [False]
-
-    def _set_opacity(value):
-        try:
-            popup.opacity = value
-            if popup.page:
-                popup.update()
-        except Exception:
-            pass
-
-    def _show():
-        try:
-            is_open[0] = True
-            popup.visible = True
-            if popup.page:
-                popup.update()
-            threading.Timer(0.05, lambda: _set_opacity(1)).start()
-        except Exception:
-            pass
-
-    def _hide():
-        try:
-            is_open[0] = False
-            _set_opacity(0)
-            threading.Timer(0.15, _finish_hide).start()
-        except Exception:
-            pass
-
-    def _finish_hide():
-        try:
-            if not is_open[0]:
-                popup.visible = False
-                if popup.page:
-                    popup.update()
-        except Exception:
-            pass
-
     def on_click(e):
-        if is_open[0]:
-            _hide()
-        else:
-            _show()
-
-    def on_popup_click(e):
-        _hide()
-
-    popup.on_click = on_popup_click
+        if dialog not in page.overlay:
+            page.overlay.append(dialog)
+        dialog.open = True
+        page.update()
 
     icon_container = ft.Container(
         content=ft.Text("!", size=16, weight=ft.FontWeight.BOLD, color=INCES_TEAL, text_align=ft.TextAlign.CENTER),
@@ -90,11 +39,7 @@ def create_help_button(page: ft.Page, title: str, help_text: str):
         alignment=ft.Alignment(0, 0),
         ink=True,
         on_click=on_click,
+        tooltip="Haz clic para ver ayuda",
     )
 
-    return ft.Stack(
-        controls=[icon_container, popup],
-        clip_behavior=ft.ClipBehavior.NONE,
-        width=32,
-        height=32,
-    )
+    return icon_container

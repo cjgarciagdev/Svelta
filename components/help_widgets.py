@@ -4,90 +4,33 @@ from config.theme import INCES_BLUE
 
 # ─── Tooltip de información ⓘ (activación por clic) ──────────────────────────
 def info_tooltip(mensaje: str, titulo: str = "Detalles de la Cifra") -> ft.Control:
-    """
-    Ícono ⓘ azul con tooltip customizado activado por clic.
-    - Clic en el ícono → muestra/oculta el panel
-    - Clic dentro del panel → lo cierra
-    - Fade-in de 150ms al abrir
-    """
-    tooltip_box = ft.Container(
-        content=ft.Column(
-            [
-                ft.Text(titulo, weight=ft.FontWeight.BOLD, color="#2A579A", size=13),
-                ft.Text(mensaje, color="#333333", size=12),
-            ],
-            spacing=4,
-            height=200,
-            scroll=ft.ScrollMode.AUTO,
+    """Ícono ⓘ azul que abre un diálogo de información sobre todo el sistema."""
+    
+    def close_dlg(e):
+        dialog.open = False
+        if dialog.page:
+            dialog.page.update()
+
+    dialog = ft.AlertDialog(
+        title=ft.Text(titulo, weight=ft.FontWeight.BOLD, color="#2A579A", size=16),
+        content=ft.Container(
+            content=ft.Text(mensaje, size=13, color=ft.Colors.BLACK87),
+            width=350,
+            padding=10
         ),
-        bgcolor=ft.Colors.WHITE,
-        border=ft.border.Border.all(1, "#E0E0E0"),
-        border_radius=6,
-        padding=12,
-        width=280,
-        shadow=ft.BoxShadow(
-            blur_radius=12,
-            color="#26000000",
-            offset=ft.Offset(0, 4),
-        ),
-        visible=False,
-        opacity=0,
-        animate_opacity=150,
-        bottom=30,
-        left=-132,
+        actions=[
+            ft.TextButton("Entendido", on_click=close_dlg)
+        ],
+        actions_alignment=ft.MainAxisAlignment.END,
+        shape=ft.RoundedRectangleBorder(radius=8),
     )
 
-    is_open = [False]
-
-    def _set_opacity(value):
-        try:
-            tooltip_box.opacity = value
-            if tooltip_box.page:
-                tooltip_box.update()
-        except Exception:
-            pass
-
-    def _show():
-        try:
-            is_open[0] = True
-            tooltip_box.visible = True
-            if tooltip_box.page:
-                tooltip_box.update()
-            import threading
-            threading.Timer(0.05, lambda: _set_opacity(1)).start()
-        except Exception:
-            pass
-
-    def _hide():
-        try:
-            is_open[0] = False
-            _set_opacity(0)
-            import threading
-            threading.Timer(0.15, lambda: _finish_hide()).start()
-        except Exception:
-            pass
-
-    def _finish_hide():
-        try:
-            if not is_open[0]:
-                tooltip_box.visible = False
-                if tooltip_box.page:
-                    tooltip_box.update()
-        except Exception:
-            pass
-
     def on_click(e):
-        """Alterna el tooltip al hacer clic en el ícono."""
-        if is_open[0]:
-            _hide()
-        else:
-            _show()
-
-    def on_tooltip_click(e):
-        """Clic dentro del panel lo cierra."""
-        _hide()
-
-    tooltip_box.on_click = on_tooltip_click
+        page = e.control.page
+        if dialog not in page.overlay:
+            page.overlay.append(dialog)
+        dialog.open = True
+        page.update()
 
     icon_container = ft.Container(
         content=ft.Icon(
@@ -98,15 +41,10 @@ def info_tooltip(mensaje: str, titulo: str = "Detalles de la Cifra") -> ft.Contr
         padding=6,
         border_radius=14,
         on_click=on_click,
-        tooltip="Más información",
+        tooltip="Haz clic para ver más detalles",
     )
 
-    return ft.Stack(
-        controls=[icon_container, tooltip_box],
-        clip_behavior=ft.ClipBehavior.NONE,
-        width=28,
-        height=28,
-    )
+    return icon_container
 
 
 # ─── Panel flotante "User Help & Resources" ─────────────────────────────────

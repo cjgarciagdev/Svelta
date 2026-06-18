@@ -180,6 +180,19 @@ def login_view(page: ft.Page, on_register_click, on_login_success):
         dialog.open = True
         page.update()
 
+    footer = ft.Container(
+        content=ft.Row(
+            [
+                ft.Text("INCES | Todos los derechos reservados", color=ft.Colors.WHITE70, size=12),
+                ft.Text("2026", color=ft.Colors.WHITE70, size=12),
+            ],
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+        ),
+        bgcolor="#1E1E1E",
+        padding=ft.Padding(left=40, top=15, right=40, bottom=15),
+        width=float("inf")
+    )
+
     return ft.Column(
         expand=True,
         spacing=0,
@@ -244,5 +257,6 @@ def login_view(page: ft.Page, on_register_click, on_login_success):
                     ],
                 ),
             ),
+            footer,
         ],
     )
