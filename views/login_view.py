@@ -70,8 +70,8 @@ def login_view(page: ft.Page, on_register_click, on_login_success):
         page.update()
         
         # Pausa pequeñita para que se vea el mensaje y hacemos el cambio de pantalla
-        time.sleep(1)
-        on_login_success(user)
+        import threading
+        threading.Timer(1.0, lambda: on_login_success(user)).start()
 
     def open_recovery_dialog(e):
         state = {"email": "", "code": "", "step": 1}

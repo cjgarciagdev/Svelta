@@ -9,3 +9,6 @@ venv/
 
 # Reports
 reports/
+
+# Backups
+backups/

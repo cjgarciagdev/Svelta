@@ -9,8 +9,11 @@ import threading
 import os
 import math
 
-GOOGLE_SCRIPT_URL_AMBITO = "https://script.google.com/macros/s/AKfycbweM1zIrHOPvhSFNggExghoUHzRo9cUfkBr5CBO4cwl0i4PKWu6pxIwXABOnovEda4_/exec"
-SCRIPT_TOKEN_AMBITO = "inces_admin_2026"
+from dotenv import load_dotenv
+load_dotenv()
+
+GOOGLE_SCRIPT_URL_AMBITO = os.getenv("GOOGLE_SCRIPT_URL_AMBITO", "")
+SCRIPT_TOKEN_AMBITO = os.getenv("SCRIPT_TOKEN_AMBITO", "")
 
 def admin_estudiantes_ambito_view(page: ft.Page, user=None):
     state = {
@@ -328,8 +331,9 @@ def admin_estudiantes_ambito_view(page: ft.Page, user=None):
 
     # Botones principales
     sync_btn = ft.ElevatedButton("Refrescar Ámbito", icon=ft.Icons.SYNC, color=ft.Colors.WHITE, bgcolor=ft.Colors.PURPLE_600, on_click=handle_sync)
-    report_btn = ft.ElevatedButton("PDF", icon=ft.Icons.PICTURE_AS_PDF, color=ft.Colors.WHITE, bgcolor=INCES_TEAL, on_click=handle_generate_report, style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)))
-    report_xlsx_btn = ft.ElevatedButton("Excel", icon=ft.Icons.GRID_ON, color=ft.Colors.WHITE, bgcolor=ft.Colors.GREEN_700, on_click=handle_generate_xlsx_report, style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)))
+    is_main_admin = user and user.get("was_formador", 0) == 0
+    report_btn = ft.ElevatedButton("PDF", icon=ft.Icons.PICTURE_AS_PDF, color=ft.Colors.WHITE, bgcolor=INCES_TEAL, on_click=handle_generate_report, style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), visible=is_main_admin)
+    report_xlsx_btn = ft.ElevatedButton("Excel", icon=ft.Icons.GRID_ON, color=ft.Colors.WHITE, bgcolor=ft.Colors.GREEN_700, on_click=handle_generate_xlsx_report, style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), visible=is_main_admin)
 
     header = ft.Row(
         controls=[

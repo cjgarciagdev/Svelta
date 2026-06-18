@@ -7,11 +7,11 @@ from urllib.error import URLError
 DB_NAME = "inces.sqlite"
 
 def get_connection():
-    """Obtiene la conexión a la base de datos SQLite."""
-    # Habilitar claves foráneas en SQLite
-    conn = sqlite3.connect(DB_NAME)
+    """Obtiene la conexión a la base de datos SQLite con soporte multiusuario."""
+    conn = sqlite3.connect(DB_NAME, timeout=10)
+    conn.execute("PRAGMA journal_mode=WAL")  # Permite múltiples lectores concurrentes
     conn.execute("PRAGMA foreign_keys = 1")
-    conn.row_factory = sqlite3.Row # Para poder acceder a las columnas por nombre
+    conn.row_factory = sqlite3.Row
     return conn
 
 def init_db():
