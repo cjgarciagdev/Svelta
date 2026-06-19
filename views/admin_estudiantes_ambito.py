@@ -331,7 +331,7 @@ def admin_estudiantes_ambito_view(page: ft.Page, user=None):
 
     # Botones principales
     sync_btn = ft.ElevatedButton("Refrescar Ámbito", icon=ft.Icons.SYNC, color=ft.Colors.WHITE, bgcolor=ft.Colors.PURPLE_600, on_click=handle_sync)
-    is_main_admin = user and user.get("was_formador", 0) == 0
+    is_main_admin = user and (dict(user).get("was_formador", 0) == 0)
     report_btn = ft.ElevatedButton("PDF", icon=ft.Icons.PICTURE_AS_PDF, color=ft.Colors.WHITE, bgcolor=INCES_TEAL, on_click=handle_generate_report, style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), visible=is_main_admin)
     report_xlsx_btn = ft.ElevatedButton("Excel", icon=ft.Icons.GRID_ON, color=ft.Colors.WHITE, bgcolor=ft.Colors.GREEN_700, on_click=handle_generate_xlsx_report, style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), visible=is_main_admin)
 

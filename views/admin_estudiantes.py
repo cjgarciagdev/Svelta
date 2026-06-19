@@ -307,7 +307,7 @@ def admin_estudiantes_view(page: ft.Page, user=None):
     # Botones principales
     sync_btn = ft.ElevatedButton("Refrescar Censo", icon=ft.Icons.SYNC, color=ft.Colors.WHITE, bgcolor=INCES_BLUE, on_click=handle_sync)
 
-    is_main_admin = user and user.get("was_formador", 0) == 0
+    is_main_admin = user and (dict(user).get("was_formador", 0) == 0)
     report_btn = ft.ElevatedButton("PDF", icon=ft.Icons.PICTURE_AS_PDF, color=ft.Colors.WHITE, bgcolor=INCES_TEAL, on_click=lambda e: handle_generate_report(e, False), style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), tooltip="Generar PDF", visible=is_main_admin)
     report_xlsx_btn = ft.ElevatedButton("Excel", icon=ft.Icons.GRID_ON, color=ft.Colors.WHITE, bgcolor=ft.Colors.GREEN_700, on_click=lambda e: handle_generate_xlsx_report(e, False), style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), tooltip="Generar Excel", visible=is_main_admin)
 
